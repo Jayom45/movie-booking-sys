@@ -1407,3 +1407,327 @@ select option {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════
+   QR TICKET CARDS  (My Bookings)
+   ═══════════════════════════════════════════════════════════ */
+
+.ticket-card {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(22px);
+  overflow: hidden;
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.ticket-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.52);
+}
+
+/* Poster strip — left column */
+.ticket-poster-strip {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.ticket-poster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  min-height: 220px;
+}
+
+/* Torn-ticket perforation edge on the right side of the poster */
+.ticket-perforation {
+  position: absolute;
+  top: 0;
+  right: -1px;
+  bottom: 0;
+  width: 2px;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 8px,
+    var(--line) 8px,
+    var(--line) 14px
+  );
+}
+
+/* Main ticket body — right column */
+.ticket-body {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 20px 22px 20px 26px;
+}
+
+/* Top status row */
+.ticket-status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ticket-confirmed-label {
+  background: rgba(98, 240, 183, 0.14);
+  border-color: rgba(98, 240, 183, 0.26);
+  color: var(--green);
+}
+
+.ticket-ref {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background: rgba(110, 231, 249, 0.1);
+  border: 1px solid rgba(110, 231, 249, 0.22);
+  border-radius: 999px;
+  color: var(--cyan);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  font-family: 'Courier New', monospace;
+}
+
+/* Movie title */
+.ticket-title {
+  margin: 0;
+  font-size: clamp(1.1rem, 2.2vw, 1.55rem);
+  line-height: 1.15;
+}
+
+.ticket-genre {
+  margin: -8px 0 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+/* Info grid */
+.ticket-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.ticket-info-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--muted);
+}
+
+.ticket-info-item svg {
+  margin-top: 3px;
+  flex-shrink: 0;
+  color: var(--gold);
+}
+
+.ticket-info-item div {
+  display: grid;
+  gap: 2px;
+}
+
+.ticket-info-label {
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.ticket-info-item strong {
+  color: var(--text);
+  font-size: 0.92rem;
+}
+
+.ticket-info-item small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.ticket-amount {
+  grid-column: 1 / -1;
+}
+
+.ticket-price {
+  color: var(--gold) !important;
+  font-size: 1.15rem !important;
+}
+
+/* QR toggle button */
+.qr-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  padding: 9px 18px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 900;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease, transform 150ms ease;
+}
+
+.qr-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--text);
+  transform: translateY(-1px);
+}
+
+.qr-toggle-btn-active {
+  background: rgba(110, 231, 249, 0.12);
+  border-color: rgba(110, 231, 249, 0.3);
+  color: var(--cyan);
+}
+
+/* Expandable QR panel */
+.qr-panel {
+  overflow: hidden;
+}
+
+.qr-panel-inner {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 20px;
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+}
+
+/* The actual QR image */
+.qr-image {
+  width: 160px;
+  height: 160px;
+  border-radius: 14px;
+  border: 3px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  display: block;
+  flex-shrink: 0;
+}
+
+/* Placeholder while QR generates */
+.qr-placeholder {
+  width: 160px;
+  height: 160px;
+  border-radius: 14px;
+  flex-shrink: 0;
+}
+
+/* QR meta text */
+.qr-meta {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.qr-meta .eyebrow {
+  margin: 0;
+}
+
+.qr-instructions {
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.qr-ref-box {
+  display: grid;
+  gap: 5px;
+  padding: 12px 14px;
+  background: rgba(110, 231, 249, 0.07);
+  border: 1px dashed rgba(110, 231, 249, 0.28);
+  border-radius: 14px;
+}
+
+.qr-ref-box span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.qr-ref-box code {
+  color: var(--cyan);
+  font-size: 1.1rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  font-family: 'Courier New', monospace;
+}
+
+/* Skeleton */
+.ticket-skeleton {
+  min-height: 200px;
+  pointer-events: none;
+}
+
+/* ── Responsive ── */
+@media (max-width: 720px) {
+  .ticket-card {
+    grid-template-columns: 1fr;
+  }
+
+  .ticket-poster-strip {
+    height: 200px;
+  }
+
+  .ticket-poster {
+    min-height: unset;
+  }
+
+  .ticket-perforation {
+    top: auto;
+    right: 0;
+    bottom: -1px;
+    left: 0;
+    width: auto;
+    height: 2px;
+    background: repeating-linear-gradient(
+      to right,
+      transparent,
+      transparent 8px,
+      var(--line) 8px,
+      var(--line) 14px
+    );
+  }
+
+  .ticket-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .qr-panel-inner {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .qr-ref-box {
+    text-align: left;
+  }
+}
+
+@media (max-width: 480px) {
+  .ticket-body {
+    padding: 16px;
+  }
+
+  .qr-image,
+  .qr-placeholder {
+    width: 140px;
+    height: 140px;
+  }
+}

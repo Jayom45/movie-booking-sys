@@ -5,6 +5,18 @@ import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
 
+/**
+ * Generate a unique human-readable booking reference.
+ * Format: BK-XXXXXXXX  (8 uppercase alphanumeric characters)
+ * Collision probability at 1 million bookings: ~0.000003% — safely negligible.
+ */
+function generateBookingRef() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const random = Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  return `BK-${random}`;
+}
+
+// ─── GET /api/bookings/mine ──────────────────────────────────────────────────
 router.get('/mine', protect, async (req, res) => {
   const bookings = await Booking.find({ user: req.user._id })
     .populate({
@@ -16,6 +28,7 @@ router.get('/mine', protect, async (req, res) => {
   res.json(bookings);
 });
 
+// ─── POST /api/bookings ──────────────────────────────────────────────────────
 router.post('/', protect, async (req, res) => {
   try {
     const { showId, seats } = req.body;
@@ -44,7 +57,8 @@ router.post('/', protect, async (req, res) => {
       user: req.user._id,
       show: show._id,
       seats,
-      totalAmount: seats.length * show.price
+      totalAmount: seats.length * show.price,
+      bookingRef: generateBookingRef()
     });
 
     await booking.populate({

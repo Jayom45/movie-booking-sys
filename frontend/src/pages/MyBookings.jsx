@@ -1,14 +1,180 @@
 import { motion } from 'framer-motion';
-import { CalendarClock, MapPin, Ticket } from 'lucide-react';
+import { CalendarClock, CheckCircle2, Hash, MapPin, QrCode, Ticket } from 'lucide-react';
+import QRCode from 'qrcode';
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 
+// ─── Build the plain-text QR payload ─────────────────────────────────────────
+function buildQrPayload(booking) {
+  const show = booking.show;
+  const movie = show.movie;
+  const dateStr = new Date(show.showTime).toLocaleString([], {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  return [
+    '▶ CINEBOOK TICKET',
+    `Ref     : ${booking.bookingRef || booking._id}`,
+    `Movie   : ${movie.title}`,
+    `Theatre : ${show.theater}, ${show.city}`,
+    `Screen  : ${show.screen}`,
+    `Time    : ${dateStr}`,
+    `Seats   : ${booking.seats.join(', ')}`,
+    `Amount  : Rs ${booking.totalAmount}`
+  ].join('\n');
+}
+
+// ─── QR Code image component ──────────────────────────────────────────────────
+function QRTicketCode({ booking }) {
+  const [qrDataUrl, setQrDataUrl] = useState('');
+
+  useEffect(() => {
+    const payload = buildQrPayload(booking);
+    QRCode.toDataURL(payload, {
+      width: 200,
+      margin: 2,
+      color: {
+        dark: '#0b0d14',   // dark module colour — matches app background
+        light: '#f7f7fb'   // light module colour — matches app text
+      },
+      errorCorrectionLevel: 'M'
+    }).then(setQrDataUrl);
+  }, [booking]);
+
+  if (!qrDataUrl) {
+    return <div className="qr-placeholder skeleton" />;
+  }
+
+  return <img className="qr-image" src={qrDataUrl} alt="Booking QR Code" />;
+}
+
+// ─── Single ticket card ───────────────────────────────────────────────────────
+function BookingTicket({ booking, index }) {
+  const [qrOpen, setQrOpen] = useState(false);
+  const show = booking.show;
+  const movie = show.movie;
+  const ref = booking.bookingRef;
+
+  return (
+    <motion.article
+      className="ticket-card"
+      initial={{ opacity: 0, y: 22 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.06 }}
+    >
+      {/* ── Left: poster strip ── */}
+      <div className="ticket-poster-strip">
+        <img src={movie.posterUrl} alt={movie.title} className="ticket-poster" />
+        <div className="ticket-perforation" />
+      </div>
+
+      {/* ── Centre: details ── */}
+      <div className="ticket-body">
+        <div className="ticket-status-row">
+          <span className="premium-label ticket-confirmed-label">
+            <CheckCircle2 size={14} /> Confirmed
+          </span>
+          {ref && (
+            <span className="ticket-ref">
+              <Hash size={12} /> {ref}
+            </span>
+          )}
+        </div>
+
+        <h2 className="ticket-title">{movie.title}</h2>
+        <p className="ticket-genre">{movie.genre} · {movie.language}</p>
+
+        <div className="ticket-info-grid">
+          <div className="ticket-info-item">
+            <MapPin size={14} />
+            <div>
+              <span className="ticket-info-label">Theatre</span>
+              <strong>{show.theater}</strong>
+              <small>{show.city} · {show.screen}</small>
+            </div>
+          </div>
+          <div className="ticket-info-item">
+            <CalendarClock size={14} />
+            <div>
+              <span className="ticket-info-label">Date & Time</span>
+              <strong>
+                {new Date(show.showTime).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
+              </strong>
+              <small>{new Date(show.showTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
+            </div>
+          </div>
+          <div className="ticket-info-item">
+            <Ticket size={14} />
+            <div>
+              <span className="ticket-info-label">Seats</span>
+              <strong>{booking.seats.join(', ')}</strong>
+              <small>{booking.seats.length} {booking.seats.length === 1 ? 'ticket' : 'tickets'}</small>
+            </div>
+          </div>
+          <div className="ticket-info-item ticket-amount">
+            <div>
+              <span className="ticket-info-label">Total Paid</span>
+              <strong className="ticket-price">Rs {booking.totalAmount}</strong>
+            </div>
+          </div>
+        </div>
+
+        {/* ── QR toggle button ── */}
+        <button
+          className={`qr-toggle-btn ${qrOpen ? 'qr-toggle-btn-active' : ''}`}
+          onClick={() => setQrOpen((prev) => !prev)}
+        >
+          <QrCode size={16} />
+          {qrOpen ? 'Hide QR Ticket' : 'Show QR Ticket'}
+        </button>
+
+        {/* ── Expandable QR panel ── */}
+        {qrOpen && (
+          <motion.div
+            className="qr-panel"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25 }}
+          >
+            <div className="qr-panel-inner">
+              <QRTicketCode booking={booking} />
+              <div className="qr-meta">
+                <p className="eyebrow">Scan to verify</p>
+                <p className="qr-instructions">
+                  Present this QR at the cinema entrance. The staff will scan it to verify your booking.
+                </p>
+                {ref && (
+                  <div className="qr-ref-box">
+                    <span>Booking Reference</span>
+                    <code>{ref}</code>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </div>
+    </motion.article>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 export default function MyBookings() {
   const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    api('/bookings/mine').then(setBookings).catch((err) => setError(err.message));
+    api('/bookings/mine')
+      .then(setBookings)
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
   }, []);
 
   return (
@@ -16,25 +182,34 @@ export default function MyBookings() {
       <div className="page-hero compact-hero">
         <p className="eyebrow">Your tickets</p>
         <h1>My Bookings</h1>
-        <p>All confirmed seats, showtimes, and ticket details in one premium pass library.</p>
+        <p>All confirmed seats, showtimes, and QR ticket passes in one premium library.</p>
       </div>
+
       {error && <div className="alert">{error}</div>}
-      {bookings.length === 0 && !error ? (
-        <div className="empty-state"><Ticket size={34} /><h2>No bookings yet</h2><p>Your confirmed movie tickets will appear here.</p></div>
-      ) : (
-        <div className="booking-list">
-          {bookings.map((booking, index) => (
-            <motion.article className="booking-card" key={booking._id} initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}>
-              <img src={booking.show.movie.posterUrl} alt={booking.show.movie.title} />
-              <div>
-                <span className="premium-label"><Ticket size={14} /> Confirmed</span>
-                <h2>{booking.show.movie.title}</h2>
-                <p><MapPin size={15} /> {booking.show.theater}, {booking.show.city}</p>
-                <p><CalendarClock size={15} /> {new Date(booking.show.showTime).toLocaleString()}</p>
-                <strong>Seats: {booking.seats.join(', ')}</strong>
-                <span>Paid Rs {booking.totalAmount}</span>
+
+      {loading ? (
+        <div className="booking-list" style={{ marginTop: '22px' }}>
+          {[1, 2].map((i) => (
+            <div key={i} className="ticket-card ticket-skeleton">
+              <div className="ticket-poster-strip skeleton" style={{ width: '130px', borderRadius: '20px 0 0 20px' }} />
+              <div className="ticket-body" style={{ gap: '12px' }}>
+                <div className="skeleton" style={{ width: '40%', height: '14px', borderRadius: '999px' }} />
+                <div className="skeleton" style={{ width: '70%', height: '22px', borderRadius: '999px' }} />
+                <div className="skeleton" style={{ width: '90%', height: '80px', borderRadius: '16px' }} />
               </div>
-            </motion.article>
+            </div>
+          ))}
+        </div>
+      ) : bookings.length === 0 && !error ? (
+        <div className="empty-state">
+          <Ticket size={34} />
+          <h2>No bookings yet</h2>
+          <p>Your confirmed movie tickets will appear here.</p>
+        </div>
+      ) : (
+        <div className="booking-list" style={{ marginTop: '22px' }}>
+          {bookings.map((booking, index) => (
+            <BookingTicket key={booking._id} booking={booking} index={index} />
           ))}
         </div>
       )}

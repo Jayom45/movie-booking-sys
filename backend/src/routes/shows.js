@@ -4,10 +4,25 @@ import { adminOnly, protect } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.get('/', async (req, res) => {
+function buildShowFilter(query) {
   const filter = {};
-  if (req.query.movie) filter.movie = req.query.movie;
-  if (req.query.city) filter.city = new RegExp(req.query.city, 'i');
+  if (query.movie) filter.movie = query.movie;
+  if (query.city) filter.city = new RegExp(query.city, 'i');
+  if (query.date) {
+    const start = new Date(`${query.date}T00:00:00.000`);
+    const end = new Date(`${query.date}T23:59:59.999`);
+    filter.showTime = { $gte: start, $lte: end };
+  }
+  return filter;
+}
+
+router.get('/meta/cities', async (req, res) => {
+  const cities = await Show.distinct('city', { showTime: { $gte: new Date() } });
+  res.json(cities.sort());
+});
+
+router.get('/', async (req, res) => {
+  const filter = buildShowFilter(req.query);
 
   const shows = await Show.find(filter).populate('movie').sort({ showTime: 1 });
   res.json(shows);

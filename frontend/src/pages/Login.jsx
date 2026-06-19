@@ -1,3 +1,5 @@
+import { motion } from 'framer-motion';
+import { Lock, Mail, Ticket } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api.js';
@@ -17,15 +19,19 @@ export default function Login({ onLogin }) {
   }
 
   return (
-    <section className="auth-panel">
-      <h1>Login</h1>
-      <form onSubmit={submit}>
-        <label>Email<input value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} /></label>
-        <label>Password<input type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} /></label>
-        <button className="button primary">Login</button>
-      </form>
-      {error && <div className="alert">{error}</div>}
-      <p className="muted">New here? <Link to="/register">Create an account</Link></p>
+    <section className="auth-screen">
+      <motion.div className="auth-panel" initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }}>
+        <span className="premium-label"><Ticket size={14} /> Member access</span>
+        <h1>Welcome back</h1>
+        <p>Sign in to continue booking premium movie experiences.</p>
+        <form onSubmit={submit}>
+          <label>Email<div className="input-wrap"><Mail size={17} /><input value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} /></div></label>
+          <label>Password<div className="input-wrap"><Lock size={17} /><input type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} /></div></label>
+          <button className="button primary">Login</button>
+        </form>
+        {error && <div className="alert">{error}</div>}
+        <p className="muted">New here? <Link to="/register">Create an account</Link></p>
+      </motion.div>
     </section>
   );
 }

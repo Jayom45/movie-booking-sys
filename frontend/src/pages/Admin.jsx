@@ -1,4 +1,5 @@
-import { Plus } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { MonitorPlay, Plus, Settings } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 
@@ -65,12 +66,17 @@ export default function Admin() {
 
   return (
     <section>
-      <h1>Admin</h1>
+      <div className="page-hero compact-hero">
+        <p className="eyebrow">Studio control</p>
+        <h1>Admin Console</h1>
+        <p>Publish movies and create showtimes while keeping the customer experience untouched.</p>
+      </div>
       {message && <div className="success">{message}</div>}
       {error && <div className="alert">{error}</div>}
 
       <div className="admin-grid">
-        <form className="admin-form" onSubmit={addMovie}>
+        <motion.form className="admin-form glass-panel" onSubmit={addMovie} initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}>
+          <span className="premium-label"><MonitorPlay size={14} /> Catalog</span>
           <h2>Add Movie</h2>
           {Object.keys(emptyMovie).map((key) => (
             <label key={key}>
@@ -84,9 +90,10 @@ export default function Admin() {
             </label>
           ))}
           <button className="button primary"><Plus size={17} /> Add Movie</button>
-        </form>
+        </motion.form>
 
-        <form className="admin-form" onSubmit={addShow}>
+        <motion.form className="admin-form glass-panel" onSubmit={addShow} initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+          <span className="premium-label"><Settings size={14} /> Scheduling</span>
           <h2>Add Show</h2>
           <label>
             movie
@@ -107,7 +114,7 @@ export default function Admin() {
             </label>
           ))}
           <button className="button primary"><Plus size={17} /> Add Show</button>
-        </form>
+        </motion.form>
       </div>
     </section>
   );

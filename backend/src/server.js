@@ -7,6 +7,7 @@ import bookingRoutes from './routes/bookings.js';
 import movieRoutes from './routes/movies.js';
 import reviewRoutes from './routes/reviews.js';
 import showRoutes from './routes/shows.js';
+import adminRoutes from './routes/admin.js';
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use('/api/movies', movieRoutes);
 app.use('/api/shows', showRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });

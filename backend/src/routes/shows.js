@@ -16,11 +16,23 @@ function buildShowFilter(query) {
   return filter;
 }
 
+// ─── GET /api/shows/meta/cities  (public) ─────────────────────────────────────
 router.get('/meta/cities', async (req, res) => {
   const cities = await Show.distinct('city', { showTime: { $gte: new Date() } });
   res.json(cities.sort());
 });
 
+// ─── GET /api/shows/admin/all  (admin — all shows, no time filter) ─────────────
+router.get('/admin/all', protect, adminOnly, async (req, res) => {
+  try {
+    const shows = await Show.find({}).populate('movie', 'title').sort({ showTime: -1 });
+    res.json(shows);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// ─── GET /api/shows  (public) ─────────────────────────────────────────────────
 router.get('/', async (req, res) => {
   const filter = buildShowFilter(req.query);
 
@@ -28,6 +40,7 @@ router.get('/', async (req, res) => {
   res.json(shows);
 });
 
+// ─── GET /api/shows/:id  (public) ─────────────────────────────────────────────
 router.get('/:id', async (req, res) => {
   const show = await Show.findById(req.params.id).populate('movie');
 
@@ -38,10 +51,40 @@ router.get('/:id', async (req, res) => {
   res.json(show);
 });
 
+// ─── POST /api/shows  (admin) ─────────────────────────────────────────────────
 router.post('/', protect, adminOnly, async (req, res) => {
   const show = await Show.create(req.body);
   await show.populate('movie');
   res.status(201).json(show);
+});
+
+// ─── PUT /api/shows/:id  (admin — edit show) ──────────────────────────────────
+router.put('/:id', protect, adminOnly, async (req, res) => {
+  try {
+    const { theater, city, screen, showTime, price, totalSeats } = req.body;
+    const show = await Show.findByIdAndUpdate(
+      req.params.id,
+      { theater, city, screen, showTime, price, totalSeats },
+      { new: true, runValidators: true }
+    ).populate('movie', 'title');
+
+    if (!show) return res.status(404).json({ message: 'Show not found' });
+
+    res.json(show);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// ─── DELETE /api/shows/:id  (admin — hard-delete show) ────────────────────────
+router.delete('/:id', protect, adminOnly, async (req, res) => {
+  try {
+    const show = await Show.findByIdAndDelete(req.params.id);
+    if (!show) return res.status(404).json({ message: 'Show not found' });
+    res.json({ message: 'Show deleted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 export default router;

@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   color-scheme: dark;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: #f7f7fb;
@@ -1720,14 +1720,437 @@ select option {
   }
 }
 
-@media (max-width: 480px) {
-  .ticket-body {
-    padding: 16px;
-  }
+/* ═══════════════════════════════════════════════════════════
+   ADMIN CONSOLE — Enhanced
+   ═══════════════════════════════════════════════════════════ */
 
-  .qr-image,
-  .qr-placeholder {
-    width: 140px;
-    height: 140px;
+.admin-page {
+  display: grid;
+  gap: 0;
+}
+
+.admin-section {
+  margin-top: 28px;
+}
+
+.admin-section-label {
+  margin-bottom: 12px;
+}
+
+/* ── Overview stat cards ── */
+.stat-cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 22px;
+}
+
+.stat-icon-wrap {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, rgba(255, 45, 85, 0.22), rgba(255, 122, 56, 0.18));
+  border: 1px solid rgba(255, 61, 85, 0.24);
+  border-radius: 16px;
+  color: #ff7a56;
+}
+
+.stat-card-body {
+  display: grid;
+  gap: 4px;
+}
+
+.stat-label {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--text);
+  line-height: 1;
+}
+
+.skeleton-stat {
+  width: 60px;
+  height: 28px;
+  border-radius: 8px;
+}
+
+/* ── Management panels ── */
+.mgmt-section {
+  padding: 24px;
+}
+
+.mgmt-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.mgmt-header h2 {
+  margin-top: 8px;
+}
+
+.mgmt-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  backdrop-filter: blur(16px);
+  min-width: 240px;
+}
+
+.mgmt-search input {
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: var(--text);
+  min-height: unset;
+  padding: 0;
+  border-radius: 0;
+  width: 100%;
+  font-size: 0.9rem;
+}
+
+/* ── Management table ── */
+.mgmt-table-wrap {
+  overflow-x: auto;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+}
+
+.mgmt-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.mgmt-table th {
+  padding: 12px 14px;
+  text-align: left;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.mgmt-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  vertical-align: middle;
+  color: #d0d4de;
+}
+
+.mgmt-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.mgmt-table tbody tr {
+  transition: background 140ms ease;
+}
+
+.mgmt-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.row-inactive {
+  opacity: 0.52;
+}
+
+.mgmt-poster {
+  width: 44px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+}
+
+.mgmt-badge {
+  display: inline-block;
+  padding: 3px 9px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.mgmt-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--gold);
+  font-weight: 900;
+}
+
+.mgmt-seats {
+  font-weight: 900;
+  color: var(--green);
+}
+
+.mgmt-seats.seats-full {
+  color: var(--red);
+}
+
+/* Status pills */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.status-pill.active {
+  background: rgba(98, 240, 183, 0.14);
+  border: 1px solid rgba(98, 240, 183, 0.26);
+  color: var(--green);
+}
+
+.status-pill.inactive {
+  background: rgba(255, 61, 85, 0.1);
+  border: 1px solid rgba(255, 61, 85, 0.22);
+  color: var(--red);
+}
+
+/* Action buttons */
+.action-group {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.tbl-btn {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.07);
+  cursor: pointer;
+  color: var(--muted);
+  transition: background 140ms ease, color 140ms ease, transform 140ms ease, border-color 140ms ease;
+}
+
+.tbl-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.tbl-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.tbl-btn.edit:hover:not(:disabled) {
+  background: rgba(110, 231, 249, 0.14);
+  border-color: rgba(110, 231, 249, 0.3);
+  color: var(--cyan);
+}
+
+.tbl-btn.toggle:hover:not(:disabled) {
+  background: rgba(255, 61, 85, 0.14);
+  border-color: rgba(255, 61, 85, 0.3);
+  color: var(--red);
+}
+
+.tbl-btn.toggle.restore:hover:not(:disabled) {
+  background: rgba(98, 240, 183, 0.14);
+  border-color: rgba(98, 240, 183, 0.3);
+  color: var(--green);
+}
+
+.tbl-btn.del:hover:not(:disabled) {
+  background: rgba(255, 61, 85, 0.16);
+  border-color: rgba(255, 61, 85, 0.36);
+  color: #ff6b7a;
+}
+
+/* Skeleton rows */
+.mgmt-skeleton {
+  display: grid;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+.mgmt-row-skeleton {
+  height: 58px;
+  border-radius: 14px;
+}
+
+/* ── Modal ── */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(4, 5, 9, 0.82);
+  backdrop-filter: blur(10px);
+}
+
+.modal-box {
+  width: min(580px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: rgba(14, 16, 24, 0.98);
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.7);
+  padding: 28px;
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.modal-header h3 {
+  margin: 6px 0 0;
+  font-size: 1.25rem;
+}
+
+.modal-close-btn {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--text);
+}
+
+.modal-form {
+  display: grid;
+  gap: 14px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+/* Confirmation dialog */
+.confirm-box {
+  max-width: 400px;
+  text-align: center;
+}
+
+.confirm-icon {
+  color: var(--red);
+  margin: 0 auto 10px;
+  display: block;
+}
+
+.confirm-box h3 {
+  margin: 0 0 8px;
+}
+
+.confirm-box p {
+  color: var(--muted);
+  font-size: 0.94rem;
+  margin-bottom: 22px;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.danger-btn {
+  background: linear-gradient(135deg, #ff2d55, #c0132a) !important;
+  box-shadow: 0 12px 32px rgba(255, 45, 85, 0.3) !important;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1100px) {
+  .stat-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+@media (max-width: 980px) {
+  .mgmt-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .mgmt-search {
+    width: 100%;
+    min-width: unset;
+  }
+}
+
+@media (max-width: 620px) {
+  .stat-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stat-card {
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .stat-value {
+    font-size: 1.6rem;
+  }
+
+  .modal-box {
+    padding: 20px;
+    border-radius: 22px;
+  }
+}
+
+@media (max-width: 420px) {
+  .stat-cards {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+

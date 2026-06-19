@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion';
-import { CalendarClock, IndianRupee, MapPin, ShieldCheck, Sofa, Star, Ticket } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { CalendarClock, IndianRupee, MapPin, MessageSquare, Pencil, ShieldCheck, Sofa, Star, Ticket, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../api.js';
@@ -19,6 +19,347 @@ function formatTime(value) {
   return new Date(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
+function timeAgo(value) {
+  const seconds = Math.floor((Date.now() - new Date(value)) / 1000);
+  if (seconds < 60) return 'just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  return formatDate(value);
+}
+
+// ─── Star Rating Input ────────────────────────────────────────────────────────
+function StarRatingInput({ value, onChange }) {
+  const [hovered, setHovered] = useState(0);
+
+  return (
+    <div className="star-input" role="group" aria-label="Rating">
+      {Array.from({ length: 10 }, (_, i) => i + 1).map((star) => (
+        <button
+          key={star}
+          type="button"
+          className={`star-btn ${star <= (hovered || value) ? 'star-btn-active' : ''}`}
+          onClick={() => onChange(star)}
+          onMouseEnter={() => setHovered(star)}
+          onMouseLeave={() => setHovered(0)}
+          aria-label={`${star} out of 10`}
+        >
+          <Star size={20} />
+        </button>
+      ))}
+      {value > 0 && <span className="star-value">{value} / 10</span>}
+    </div>
+  );
+}
+
+// ─── Single Review Card ───────────────────────────────────────────────────────
+function ReviewCard({ review, currentUserId, onEdit, onDelete }) {
+  const isOwner = currentUserId && review.user._id === currentUserId;
+
+  return (
+    <motion.article
+      className="review-card"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+    >
+      <div className="review-header">
+        <div className="review-author">
+          <span className="review-avatar">{review.user.name.charAt(0).toUpperCase()}</span>
+          <div>
+            <strong>{review.user.name}</strong>
+            <time>{timeAgo(review.createdAt)}</time>
+          </div>
+        </div>
+        <div className="review-rating-badge">
+          <Star size={14} />
+          {review.rating} / 10
+        </div>
+      </div>
+
+      <div className="review-stars-row">
+        {Array.from({ length: 10 }, (_, i) => i + 1).map((star) => (
+          <Star
+            key={star}
+            size={15}
+            className={star <= review.rating ? 'star-filled' : 'star-empty'}
+          />
+        ))}
+      </div>
+
+      <p className="review-comment">{review.comment}</p>
+
+      {isOwner && (
+        <div className="review-actions">
+          <button className="review-action-btn" onClick={() => onEdit(review)}>
+            <Pencil size={14} /> Edit
+          </button>
+          <button className="review-action-btn danger" onClick={() => onDelete(review._id)}>
+            <Trash2 size={14} /> Delete
+          </button>
+        </div>
+      )}
+    </motion.article>
+  );
+}
+
+// ─── Review Form ─────────────────────────────────────────────────────────────
+function ReviewForm({ movieId, existingReview, onSuccess, onCancel }) {
+  const [rating, setRating] = useState(existingReview?.rating || 0);
+  const [comment, setComment] = useState(existingReview?.comment || '');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const isEditing = Boolean(existingReview);
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    if (rating === 0) {
+      setError('Please select a rating.');
+      return;
+    }
+    if (!comment.trim()) {
+      setError('Please write a comment.');
+      return;
+    }
+    try {
+      setLoading(true);
+      setError('');
+      let saved;
+      if (isEditing) {
+        saved = await api(`/reviews/${existingReview._id}`, {
+          method: 'PUT',
+          body: JSON.stringify({ rating, comment })
+        });
+      } else {
+        saved = await api('/reviews', {
+          method: 'POST',
+          body: JSON.stringify({ movieId, rating, comment })
+        });
+      }
+      onSuccess(saved, isEditing);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <motion.form
+      className="review-form glass-panel"
+      onSubmit={handleSubmit}
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      <p className="eyebrow">{isEditing ? 'Edit your review' : 'Write a review'}</p>
+      <h3 style={{ marginBottom: '16px' }}>{isEditing ? 'Update your thoughts' : 'Share your experience'}</h3>
+
+      <label>
+        Your Rating
+        <StarRatingInput value={rating} onChange={setRating} />
+      </label>
+
+      <label>
+        Your Review
+        <textarea
+          className="review-textarea"
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          placeholder="What did you think of this movie?"
+          maxLength={1000}
+          rows={4}
+        />
+        <span className="char-count">{comment.length} / 1000</span>
+      </label>
+
+      {error && <div className="alert">{error}</div>}
+
+      <div className="review-form-actions">
+        <button className="button primary" disabled={loading}>
+          {loading ? 'Saving…' : isEditing ? 'Update Review' : 'Submit Review'}
+        </button>
+        {isEditing && (
+          <button type="button" className="button glass" onClick={onCancel}>
+            Cancel
+          </button>
+        )}
+      </div>
+    </motion.form>
+  );
+}
+
+// ─── Review Section ───────────────────────────────────────────────────────────
+function ReviewSection({ movieId, movie, user, onMovieRatingUpdate }) {
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [editingReview, setEditingReview] = useState(null);
+  const [deleteError, setDeleteError] = useState('');
+
+  const userReview = useMemo(
+    () => (user ? reviews.find((r) => r.user._id === user.id) : null),
+    [reviews, user]
+  );
+
+  async function loadReviews() {
+    try {
+      setLoading(true);
+      const data = await api(`/reviews?movie=${movieId}`);
+      setReviews(data);
+      setError('');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadReviews();
+  }, [movieId]);
+
+  function handleSuccess(saved, isEditing) {
+    if (isEditing) {
+      setReviews((prev) => prev.map((r) => (r._id === saved._id ? saved : r)));
+    } else {
+      setReviews((prev) => [saved, ...prev]);
+    }
+    setEditingReview(null);
+    // Trigger parent to refresh movie data for updated rating
+    if (onMovieRatingUpdate) onMovieRatingUpdate();
+  }
+
+  async function handleDelete(reviewId) {
+    try {
+      setDeleteError('');
+      await api(`/reviews/${reviewId}`, { method: 'DELETE' });
+      setReviews((prev) => prev.filter((r) => r._id !== reviewId));
+      setEditingReview(null);
+      if (onMovieRatingUpdate) onMovieRatingUpdate();
+    } catch (err) {
+      setDeleteError(err.message);
+    }
+  }
+
+  const avgRating = movie?.rating || 0;
+  const reviewCount = movie?.reviewCount || reviews.length;
+
+  return (
+    <section className="review-section">
+      {/* ── Section header ── */}
+      <div className="review-section-header">
+        <div>
+          <p className="eyebrow">Community</p>
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <MessageSquare size={22} />
+            Reviews & Ratings
+          </h2>
+        </div>
+        <div className="review-avg-block">
+          <div className="review-avg-score">
+            <Star size={22} className="star-filled" />
+            {avgRating > 0 ? avgRating.toFixed(1) : '—'}
+          </div>
+          <span className="review-avg-label">
+            {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
+          </span>
+        </div>
+      </div>
+
+      {/* ── Rating distribution visual ── */}
+      {reviews.length > 0 && (
+        <div className="review-stars-display">
+          {Array.from({ length: 10 }, (_, i) => i + 1).map((star) => (
+            <Star
+              key={star}
+              size={18}
+              className={star <= Math.round(avgRating) ? 'star-filled' : 'star-empty'}
+            />
+          ))}
+          <span>{avgRating > 0 ? `${avgRating.toFixed(1)} average` : ''}</span>
+        </div>
+      )}
+
+      {/* ── Submit / Edit form ── */}
+      {user ? (
+        userReview && !editingReview ? (
+          <div className="already-reviewed-note">
+            <ShieldCheck size={16} />
+            You reviewed this movie. Select your review below to edit or delete it.
+          </div>
+        ) : !editingReview ? (
+          <ReviewForm
+            movieId={movieId}
+            existingReview={null}
+            onSuccess={handleSuccess}
+            onCancel={() => setEditingReview(null)}
+          />
+        ) : null
+      ) : (
+        <div className="review-login-prompt glass-panel">
+          <MessageSquare size={20} />
+          <span>
+            <Link to="/login">Login</Link> to write a review for this movie.
+          </span>
+        </div>
+      )}
+
+      {/* ── Inline edit form (shown below the prompt area) ── */}
+      {editingReview && (
+        <ReviewForm
+          movieId={movieId}
+          existingReview={editingReview}
+          onSuccess={handleSuccess}
+          onCancel={() => setEditingReview(null)}
+        />
+      )}
+
+      {deleteError && <div className="alert">{deleteError}</div>}
+
+      {/* ── Review list ── */}
+      {loading ? (
+        <div className="review-skeleton-list">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="review-card review-skeleton">
+              <div className="skeleton" style={{ width: '40%', height: '14px', borderRadius: '999px' }} />
+              <div className="skeleton" style={{ width: '100%', height: '56px', borderRadius: '12px', marginTop: '12px' }} />
+            </div>
+          ))}
+        </div>
+      ) : error ? (
+        <div className="alert">{error}</div>
+      ) : reviews.length === 0 ? (
+        <div className="empty-state" style={{ minHeight: '180px' }}>
+          <MessageSquare size={28} />
+          <h2>No reviews yet</h2>
+          <p>Be the first to share your thoughts on this movie.</p>
+        </div>
+      ) : (
+        <div className="review-list">
+          <AnimatePresence>
+            {reviews.map((review) => (
+              editingReview?._id === review._id ? null : (
+                <ReviewCard
+                  key={review._id}
+                  review={review}
+                  currentUserId={user?.id}
+                  onEdit={setEditingReview}
+                  onDelete={handleDelete}
+                />
+              )
+            ))}
+          </AnimatePresence>
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ─── Main MovieDetails Page ───────────────────────────────────────────────────
 export default function MovieDetails({ user }) {
   const { id } = useParams();
   const [movie, setMovie] = useState(null);
@@ -91,9 +432,12 @@ export default function MovieDetails({ user }) {
           <h1>{movie.title}</h1>
           <p>{movie.description}</p>
           <div className="spotlight-meta">
-            <span><Star size={16} /> {movie.rating.toFixed(1)} / 10</span>
+            <span><Star size={16} /> {movie.rating > 0 ? movie.rating.toFixed(1) : 'No ratings'} / 10</span>
             <span>{movie.durationMinutes} mins</span>
             <span>{shows.length} shows</span>
+            {movie.reviewCount > 0 && (
+              <span><MessageSquare size={16} /> {movie.reviewCount} {movie.reviewCount === 1 ? 'review' : 'reviews'}</span>
+            )}
           </div>
           <div className="mini-facts horizontal">
             <span><Sofa size={16} /> Reserved seating</span>
@@ -177,6 +521,14 @@ export default function MovieDetails({ user }) {
 
       {message && <div className="success">{message}</div>}
       {error && <div className="alert">{error}</div>}
+
+      {/* ── Reviews & Ratings ── */}
+      <ReviewSection
+        movieId={id}
+        movie={movie}
+        user={user}
+        onMovieRatingUpdate={loadMovie}
+      />
     </section>
   );
 }

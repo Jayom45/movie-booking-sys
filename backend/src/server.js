@@ -5,6 +5,7 @@ import { connectDB } from './config/db.js';
 import authRoutes from './routes/auth.js';
 import bookingRoutes from './routes/bookings.js';
 import movieRoutes from './routes/movies.js';
+import reviewRoutes from './routes/reviews.js';
 import showRoutes from './routes/shows.js';
 
 dotenv.config();
@@ -23,6 +24,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/movies', movieRoutes);
 app.use('/api/shows', showRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });

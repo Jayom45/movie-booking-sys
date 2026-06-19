@@ -10,7 +10,7 @@ import MovieDetails from './pages/MovieDetails.jsx';
 import MyBookings from './pages/MyBookings.jsx';
 import Offers from './pages/Offers.jsx';
 import Register from './pages/Register.jsx';
-import { clearSession, getSession, saveSession } from './api.js';
+import { api, clearSession, getSession, saveSession } from './api.js';
 
 function RequireAuth({ user, children }) {
   return user ? children : <Navigate to="/login" replace />;
@@ -20,13 +20,33 @@ function RequireAdmin({ user, children }) {
   return user?.role === 'admin' ? children : <Navigate to="/" replace />;
 }
 
+// Persist the selected city for the session
+function getStoredCity() {
+  return sessionStorage.getItem('cinebook-city') || '';
+}
+function storeCity(city) {
+  sessionStorage.setItem('cinebook-city', city);
+}
+
 export default function App() {
   const [session, setSession] = useState(() => getSession());
+  const [cities, setCities] = useState([]);
+  const [selectedCity, setSelectedCity] = useState(getStoredCity);
   const navigate = useNavigate();
 
   useEffect(() => {
     if (session) saveSession(session);
   }, [session]);
+
+  // Fetch cities once on app mount
+  useEffect(() => {
+    api('/shows/meta/cities').then(setCities).catch(() => {});
+  }, []);
+
+  function handleCityChange(city) {
+    setSelectedCity(city);
+    storeCity(city);
+  }
 
   const auth = useMemo(
     () => ({
@@ -47,13 +67,19 @@ export default function App() {
 
   return (
     <>
-      <Nav user={auth.user} onLogout={auth.logout} />
+      <Nav
+        user={auth.user}
+        onLogout={auth.logout}
+        cities={cities}
+        selectedCity={selectedCity}
+        onCityChange={handleCityChange}
+      />
       <main className="app-shell">
         <AnimatePresence mode="wait">
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.35 }}>
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
             <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/cinemas" element={<Cinemas />} />
+              <Route path="/" element={<Home selectedCity={selectedCity} />} />
+              <Route path="/cinemas" element={<Cinemas selectedCity={selectedCity} />} />
               <Route path="/offers" element={<Offers />} />
               <Route path="/movies/:id" element={<MovieDetails user={auth.user} />} />
               <Route path="/login" element={<Login onLogin={auth.login} />} />

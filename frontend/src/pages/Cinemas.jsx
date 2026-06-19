@@ -76,26 +76,28 @@ export default function Cinemas() {
       ) : (
         <div className="cinema-list">
           {cinemas.map((cinema, index) => (
-            <motion.article className="cinema-card" key={`${cinema.theater}-${cinema.city}`} initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.04 }}>
-              <div className="cinema-head">
-                <div>
-                  <span className="premium-label"><Sparkles size={14} /> Premium</span>
-                  <h2>{cinema.theater}</h2>
-                  <p><MapPin size={15} /> {cinema.city}</p>
+            <motion.article className="cinema-card" key={`${cinema.theater}-${cinema.city}`} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: index * 0.04 }}>
+              <div className="cinema-info-col">
+                <span className="premium-label"><Sparkles size={13} /> Premium</span>
+                <h2>{cinema.theater}</h2>
+                <p><MapPin size={14} /> {cinema.city}</p>
+                <div className="amenity-row">
+                  <span><Armchair size={14} /> Recliners</span>
+                  <span><Clock size={14} /> Instant</span>
                 </div>
-                <span><MonitorPlay size={16} /> {cinema.shows.length} shows</span>
               </div>
-              <div className="amenity-row">
-                <span><Armchair size={15} /> Recliner seats</span>
-                <span><Clock size={15} /> Instant booking</span>
-              </div>
-              <div className="cinema-shows">
-                {cinema.shows.slice(0, 5).map((show) => (
-                  <Link className="time-pill" key={show._id} to={`/movies/${show.movie._id}`}>
-                    {formatTime(show.showTime)}
-                    <small>{show.movie.title} | {formatDate(show.showTime)}</small>
-                  </Link>
-                ))}
+              <div className="cinema-shows-col">
+                <div className="cinema-shows-header">
+                  <span><MonitorPlay size={14} /> {cinema.shows.length} shows available</span>
+                </div>
+                <div className="cinema-shows">
+                  {cinema.shows.map((show) => (
+                    <Link className="time-pill" key={show._id} to={`/movies/${show.movie._id}`}>
+                      <strong>{formatTime(show.showTime)}</strong>
+                      <small>{show.movie.title}</small>
+                    </Link>
+                  ))}
+                </div>
               </div>
             </motion.article>
           ))}

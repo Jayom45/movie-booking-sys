@@ -15,13 +15,20 @@ export function clearSession() {
 
 export async function api(path, options = {}) {
   const session = getSession();
+  
+  const headers = {
+    ...(session?.token ? { Authorization: `Bearer ${session.token}` } : {}),
+    ...options.headers
+  };
+
+  // Only default to JSON if body isn't FormData and Content-Type isn't manually overridden
+  if (!(options.body instanceof FormData) && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
+
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(session?.token ? { Authorization: `Bearer ${session.token}` } : {}),
-      ...options.headers
-    }
+    headers
   });
 
   const data = await response.json().catch(() => ({}));

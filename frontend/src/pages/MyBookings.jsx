@@ -1,9 +1,9 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { CalendarClock, CheckCircle2, Hash, MapPin, QrCode, Ticket, XCircle, Download } from 'lucide-react';
+import { CalendarClock, CheckCircle2, Hash, MapPin, QrCode, Ticket, XCircle, Download, Mail } from 'lucide-react';
 import QRCode from 'qrcode';
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
-import { generateAndOpenTicketPdf } from '../pdfGenerator.jsx';
+import { generateAndOpenTicketPdf, generatePdfBlob } from '../pdfGenerator.jsx';
 
 // ─── Build the plain-text QR payload ─────────────────────────────────────────
 function buildQrPayload(booking) {
@@ -59,6 +59,7 @@ function BookingTicket({ booking, index, onCancel }) {
   const [qrOpen, setQrOpen] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [emailing, setEmailing] = useState(false);
   const show = booking.show;
   const movie = show.movie;
   const ref = booking.bookingRef;
@@ -159,6 +160,31 @@ function BookingTicket({ booking, index, onCancel }) {
               >
                 <Download size={15} />
                 {generatingPdf ? 'Opening...' : 'Download PDF'}
+              </button>
+              <button
+                className="btn-email"
+                onClick={async () => {
+                  setEmailing(true);
+                  try {
+                    const pdfBlob = await generatePdfBlob(booking);
+                    const formData = new FormData();
+                    formData.append('ticketPdf', pdfBlob, `ticket-${booking._id}.pdf`);
+                    const res = await api(`/bookings/${booking._id}/email`, {
+                      method: 'POST',
+                      body: formData
+                    });
+                    alert(res.message || 'Ticket sent successfully!');
+                  } catch (err) {
+                    alert(err.message || 'Failed to email ticket.');
+                  } finally {
+                    setEmailing(false);
+                  }
+                }}
+                disabled={emailing}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '0 16px', background: 'rgba(59, 130, 246, 0.15)', border: '1px solid rgba(59, 130, 246, 0.3)', color: '#93c5fd', borderRadius: '999px', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }}
+              >
+                <Mail size={15} />
+                {emailing ? 'Sending...' : 'Email Ticket'}
               </button>
               <button
                 className="btn-cancel"

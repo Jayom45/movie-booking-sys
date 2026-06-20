@@ -1,9 +1,12 @@
 import express from 'express';
+import multer from 'multer';
+import nodemailer from 'nodemailer';
 import Booking from '../models/Booking.js';
 import Show from '../models/Show.js';
 import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
+const upload = multer();
 
 /**
  * Generate a unique human-readable booking reference.
@@ -100,6 +103,74 @@ router.post('/:id/cancel', protect, async (req, res) => {
     res.json(booking);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+// ─── POST /api/bookings/:id/email ────────────────────────────────────────────
+router.post('/:id/email', protect, upload.single('ticketPdf'), async (req, res) => {
+  try {
+    const booking = await Booking.findOne({ _id: req.params.id, user: req.user._id }).populate({
+      path: 'show',
+      populate: { path: 'movie' }
+    });
+
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ message: 'Missing ticket PDF attachment' });
+    }
+
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      return res.status(500).json({ message: 'Email service is not configured on the server.' });
+    }
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const dateStr = new Date(booking.show.showTime).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+    const timeStr = new Date(booking.show.showTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    const mailOptions = {
+      from: `"CineBook Tickets" <${process.env.EMAIL_USER}>`,
+      to: req.user.email,
+      subject: '🎬 CineBook Ticket Confirmation',
+      text: `Hello ${req.user.name},
+
+Thank you for booking with CineBook.
+
+Your ticket is attached as a PDF.
+
+Movie: ${booking.show.movie.title}
+Theatre: ${booking.show.theater}, ${booking.show.city}
+Date: ${dateStr}
+Time: ${timeStr}
+Seats: ${booking.seats.join(', ')}
+
+Enjoy your show.
+
+Team CineBook`,
+      attachments: [
+        {
+          filename: `ticket-${booking._id}.pdf`,
+          content: req.file.buffer,
+          contentType: 'application/pdf',
+        },
+      ],
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.json({ message: 'Ticket emailed successfully' });
+  } catch (error) {
+    console.error('Email error:', error);
+    res.status(500).json({ message: 'Failed to send email. Ensure Gmail credentials are correct.' });
   }
 });
 

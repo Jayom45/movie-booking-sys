@@ -103,76 +103,72 @@ function TicketTemplate({ booking, qrDataUrl, onReady }) {
   );
 }
 
+export async function generatePdfBlob(booking) {
+  // 1. Generate QR Data URL
+  const qrDataUrl = await QRCode.toDataURL(booking._id, { 
+    width: 300, 
+    margin: 1, 
+    color: { dark: '#000000', light: '#ffffff' } 
+  });
+
+  // 2. Create hidden container
+  const container = document.createElement('div');
+  container.style.position = 'absolute';
+  container.style.top = '-9999px';
+  container.style.left = '-9999px';
+  container.style.width = '850px';
+  document.body.appendChild(container);
+
+  // 3. Render React Component
+  const root = createRoot(container);
+  
+  await new Promise((resolve) => {
+    let isResolved = false;
+    
+    const handleReady = () => {
+      if (!isResolved) {
+        isResolved = true;
+        setTimeout(resolve, 200);
+      }
+    };
+
+    root.render(<TicketTemplate booking={booking} qrDataUrl={qrDataUrl} onReady={handleReady} />);
+    setTimeout(handleReady, 1500);
+  });
+
+  // 4. Run html2canvas
+  const canvas = await html2canvas(container, {
+    scale: 2, 
+    useCORS: true, 
+    backgroundColor: '#ffffff',
+    logging: false
+  });
+
+  // 5. Cleanup DOM
+  root.unmount();
+  document.body.removeChild(container);
+
+  // 6. Generate PDF
+  const imgData = canvas.toDataURL('image/jpeg', 0.95);
+  const pdf = new jsPDF({
+    orientation: 'portrait',
+    unit: 'pt',
+    format: 'a4'
+  });
+
+  const pdfWidth = pdf.internal.pageSize.getWidth();
+  const margin = 20;
+  const renderWidth = pdfWidth - (margin * 2);
+  const renderHeight = (canvas.height * renderWidth) / canvas.width;
+
+  pdf.addImage(imgData, 'JPEG', margin, margin, renderWidth, renderHeight);
+
+  return pdf.output('blob');
+}
+
 export async function generateAndOpenTicketPdf(booking) {
   try {
-    // 1. Generate QR Data URL
-    const qrDataUrl = await QRCode.toDataURL(booking._id, { 
-      width: 300, 
-      margin: 1, 
-      color: { dark: '#000000', light: '#ffffff' } 
-    });
-
-    // 2. Create hidden container
-    const container = document.createElement('div');
-    container.style.position = 'absolute';
-    container.style.top = '-9999px';
-    container.style.left = '-9999px';
-    container.style.width = '850px';
-    // Append to document so HTML2Canvas can render it
-    document.body.appendChild(container);
-
-    // 3. Render React Component
-    const root = createRoot(container);
-    
-    await new Promise((resolve) => {
-      let isResolved = false;
-      
-      const handleReady = () => {
-        if (!isResolved) {
-          isResolved = true;
-          // Slight delay to ensure CSS paints
-          setTimeout(resolve, 200);
-        }
-      };
-
-      root.render(<TicketTemplate booking={booking} qrDataUrl={qrDataUrl} onReady={handleReady} />);
-      
-      // Fallback timeout in case image loading fails or doesn't trigger
-      setTimeout(handleReady, 1500);
-    });
-
-    // 4. Run html2canvas
-    const canvas = await html2canvas(container, {
-      scale: 2, // High resolution for PDF printing
-      useCORS: true, // Allow external movie posters
-      backgroundColor: '#ffffff',
-      logging: false
-    });
-
-    // 5. Cleanup DOM immediately
-    root.unmount();
-    document.body.removeChild(container);
-
-    // 6. Generate PDF
-    const imgData = canvas.toDataURL('image/jpeg', 0.95);
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'pt',
-      format: 'a4'
-    });
-
-    // A4 dimensions in pt: 595.28 x 841.89
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    // Leave a little margin on left/right for neatness
-    const margin = 20;
-    const renderWidth = pdfWidth - (margin * 2);
-    const renderHeight = (canvas.height * renderWidth) / canvas.width;
-
-    // Add image slightly down from top (margin)
-    pdf.addImage(imgData, 'JPEG', margin, margin, renderWidth, renderHeight);
-
-    // 7. Open in new tab
-    const pdfBlob = pdf.output('blob');
+    const pdfBlob = await generatePdfBlob(booking);
     const blobUrl = URL.createObjectURL(pdfBlob);
     window.open(blobUrl, '_blank');
   } catch (error) {

@@ -11,6 +11,7 @@ import {
   Plus,
   Search,
   Settings,
+  Ticket,
   Trash2,
   Users,
   X,
@@ -88,7 +89,7 @@ function OverviewCards({ stats, loading }) {
             {loading ? (
               <div className="skeleton skeleton-stat" />
             ) : (
-              <strong className="stat-value">{stats[key] ?? '—'}</strong>
+              <span className="stat-value">{stats[key] ?? 0}</span>
             )}
           </div>
         </motion.div>
@@ -97,7 +98,106 @@ function OverviewCards({ stats, loading }) {
   );
 }
 
-// ─── Movie edit modal ─────────────────────────────────────────────────────────
+// ─── Revenue Analytics ────────────────────────────────────────────────────────
+function AdminAnalytics() {
+  const [analytics, setAnalytics] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [timeRange, setTimeRange] = useState('all');
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    setLoading(true);
+    api(`/admin/analytics?timeRange=${timeRange}`)
+      .then(setAnalytics)
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [timeRange]);
+
+  if (error) return <div className="alert">{error}</div>;
+
+  return (
+    <div className="analytics-container">
+      <div className="analytics-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h3 style={{ margin: 0 }}>Revenue & Performance</h3>
+        <select 
+          value={timeRange} 
+          onChange={(e) => setTimeRange(e.target.value)}
+          style={{ padding: '8px 12px', borderRadius: '8px', background: 'rgba(255, 255, 255, 0.05)', color: 'white', border: '1px solid rgba(255, 255, 255, 0.1)', cursor: 'pointer' }}
+        >
+          <option value="all">All Time</option>
+          <option value="30">Last 30 Days</option>
+          <option value="7">Last 7 Days</option>
+        </select>
+      </div>
+
+      <div className="stat-cards" style={{ marginBottom: '24px' }}>
+        {/* Total Revenue */}
+        <motion.div className="stat-card glass-panel" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}>
+          <div className="stat-icon-wrap" style={{ background: 'rgba(74, 222, 128, 0.1)', color: '#4ade80' }}>
+            <span style={{ fontWeight: 'bold' }}>₹</span>
+          </div>
+          <div className="stat-card-body">
+            <span className="stat-label">Total Revenue</span>
+            {loading ? <div className="skeleton skeleton-stat" /> : <span className="stat-value">Rs {analytics?.cards?.totalRevenue?.toLocaleString()}</span>}
+          </div>
+        </motion.div>
+        
+        {/* Total Bookings */}
+        <motion.div className="stat-card glass-panel" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <div className="stat-icon-wrap" style={{ background: 'rgba(96, 165, 250, 0.1)', color: '#60a5fa' }}>
+            <BookOpen size={20} />
+          </div>
+          <div className="stat-card-body">
+            <span className="stat-label">Total Bookings</span>
+            {loading ? <div className="skeleton skeleton-stat" /> : <span className="stat-value">{analytics?.cards?.totalBookings?.toLocaleString()}</span>}
+          </div>
+        </motion.div>
+
+        {/* Tickets Sold */}
+        <motion.div className="stat-card glass-panel" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <div className="stat-icon-wrap" style={{ background: 'rgba(250, 204, 21, 0.1)', color: '#facc15' }}>
+            <Ticket size={20} />
+          </div>
+          <div className="stat-card-body">
+            <span className="stat-label">Tickets Sold</span>
+            {loading ? <div className="skeleton skeleton-stat" /> : <span className="stat-value">{analytics?.cards?.totalTicketsSold?.toLocaleString()}</span>}
+          </div>
+        </motion.div>
+
+        {/* Cancellation Rate */}
+        <motion.div className="stat-card glass-panel" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <div className="stat-icon-wrap" style={{ background: 'rgba(248, 113, 113, 0.1)', color: '#f87171' }}>
+            <XCircle size={20} />
+          </div>
+          <div className="stat-card-body">
+            <span className="stat-label">Cancellation Rate</span>
+            {loading ? <div className="skeleton skeleton-stat" /> : <span className="stat-value">{analytics?.cards?.cancellationRate}%</span>}
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Insights */}
+      <div className="insights-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+        <motion.div className="glass-panel" style={{ padding: '20px' }} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+          <p className="eyebrow" style={{ color: 'var(--gold)' }}>Top Revenue Movie</p>
+          {loading ? <div className="skeleton skeleton-title" /> : <h4 style={{ margin: '8px 0 0', fontSize: '1.2rem' }}>{analytics?.insights?.topRevenueMovie}</h4>}
+        </motion.div>
+
+        <motion.div className="glass-panel" style={{ padding: '20px' }} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.05 }}>
+          <p className="eyebrow" style={{ color: '#60a5fa' }}>Most Popular Movie</p>
+          {loading ? <div className="skeleton skeleton-title" /> : <h4 style={{ margin: '8px 0 0', fontSize: '1.2rem' }}>{analytics?.insights?.mostPopularMovie}</h4>}
+        </motion.div>
+
+        <motion.div className="glass-panel" style={{ padding: '20px' }} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
+          <p className="eyebrow" style={{ color: '#c084fc' }}>Most Active Theatre</p>
+          {loading ? <div className="skeleton skeleton-title" /> : <h4 style={{ margin: '8px 0 0', fontSize: '1.2rem' }}>{analytics?.insights?.mostActiveTheatre}</h4>}
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Add Movie form ───────────────────────────────────────────────────────────────
 const movieFields = [
   { key: 'title', label: 'Title', type: 'text' },
   { key: 'description', label: 'Description', type: 'text' },
@@ -755,12 +855,19 @@ export default function Admin() {
 
       {error && <div className="alert">{error}</div>}
 
-      {/* ── Overview cards ── */}
       <section className="admin-section">
         <div className="admin-section-label">
           <p className="eyebrow">Platform overview</p>
         </div>
         <OverviewCards stats={stats} loading={statsLoading} />
+      </section>
+
+      {/* ── Revenue & Analytics ── */}
+      <section className="admin-section">
+        <div className="admin-section-label">
+          <p className="eyebrow">Analytics</p>
+        </div>
+        <AdminAnalytics />
       </section>
 
       {/* ── Add forms ── */}

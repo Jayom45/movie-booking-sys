@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion';
-import { CalendarClock, CheckCircle2, Hash, MapPin, QrCode, Ticket, XCircle } from 'lucide-react';
+import { CalendarClock, CheckCircle2, Hash, MapPin, QrCode, Ticket, XCircle, Download } from 'lucide-react';
 import QRCode from 'qrcode';
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
+import { generateAndOpenTicketPdf } from '../pdfGenerator.jsx';
 
 // ─── Build the plain-text QR payload ─────────────────────────────────────────
 function buildQrPayload(booking) {
@@ -57,6 +58,7 @@ function QRTicketCode({ booking }) {
 function BookingTicket({ booking, index, onCancel }) {
   const [qrOpen, setQrOpen] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
   const show = booking.show;
   const movie = show.movie;
   const ref = booking.bookingRef;
@@ -141,6 +143,22 @@ function BookingTicket({ booking, index, onCancel }) {
               >
                 <QrCode size={16} />
                 {qrOpen ? 'Hide QR Ticket' : 'Show QR Ticket'}
+              </button>
+              <button
+                className="btn-pdf"
+                onClick={async () => {
+                  setGeneratingPdf(true);
+                  try {
+                    await generateAndOpenTicketPdf(booking);
+                  } finally {
+                    setGeneratingPdf(false);
+                  }
+                }}
+                disabled={generatingPdf}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '0 16px', background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', color: 'white', borderRadius: '999px', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }}
+              >
+                <Download size={15} />
+                {generatingPdf ? 'Opening...' : 'Download PDF'}
               </button>
               <button
                 className="btn-cancel"

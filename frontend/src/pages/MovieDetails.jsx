@@ -3,6 +3,7 @@ import { CalendarClock, IndianRupee, MapPin, MessageSquare, Pencil, Play, Shield
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
+import { getValidGenres } from '../utils.js';
 
 const rows = ['A', 'B', 'C', 'D'];
 // seats generation moved dynamically inside MovieDetails component
@@ -452,7 +453,7 @@ export default function MovieDetails({ user }) {
       <section className="detail-hero" style={{ '--hero-image': `url(${movie.posterUrl})` }}>
         <motion.img className="detail-poster" src={movie.posterUrl} alt={movie.title} initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} />
         <motion.div className="detail-copy" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }}>
-          <p className="eyebrow">{movie.genre} | {movie.language}</p>
+          <p className="eyebrow">{getValidGenres(movie.genre).join(', ')} | {movie.language}</p>
           <h1>{movie.title}</h1>
           <p>{movie.description}</p>
           <div className="spotlight-meta">

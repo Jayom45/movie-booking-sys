@@ -19,6 +19,11 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api.js';
 
+const ALLOWED_GENRES = [
+  'Action', 'Comedy', 'Drama', 'Fantasy', 'Horror', 
+  'Romance', 'Science Fiction', 'Sports', 'Thriller'
+];
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function fmt(value) {
   return new Date(value).toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
@@ -96,7 +101,7 @@ function OverviewCards({ stats, loading }) {
 const movieFields = [
   { key: 'title', label: 'Title', type: 'text' },
   { key: 'description', label: 'Description', type: 'text' },
-  { key: 'genre', label: 'Genre', type: 'text' },
+  { key: 'genre', label: 'Genre', type: 'multiselect' },
   { key: 'language', label: 'Language', type: 'text' },
   { key: 'durationMinutes', label: 'Duration (mins)', type: 'number' },
   { key: 'posterUrl', label: 'Poster URL', type: 'text' },
@@ -108,7 +113,7 @@ function MovieEditModal({ movie, onSave, onClose }) {
   const [form, setForm] = useState({
     title: movie.title,
     description: movie.description,
-    genre: movie.genre,
+    genre: Array.isArray(movie.genre) ? movie.genre : [],
     language: movie.language,
     durationMinutes: movie.durationMinutes,
     posterUrl: movie.posterUrl,
@@ -150,15 +155,37 @@ function MovieEditModal({ movie, onSave, onClose }) {
         </div>
         <form onSubmit={handleSave} className="modal-form">
           {movieFields.map(({ key, label, type }) => (
-            <label key={key}>
-              {label}
-              <input
-                type={type}
-                value={form[key]}
-                onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                required
-              />
-            </label>
+            <div key={key}>
+              {type === 'multiselect' ? (
+                <div className="form-group" style={{ marginBottom: '14px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px' }}>{label}</label>
+                  <div className="genre-grid">
+                    {ALLOWED_GENRES.map(g => (
+                      <label key={g} className="genre-checkbox">
+                        <input
+                          type="checkbox"
+                          checked={form[key].includes(g)}
+                          onChange={(e) => {
+                            if (e.target.checked) setForm({ ...form, [key]: [...form[key], g] });
+                            else setForm({ ...form, [key]: form[key].filter(x => x !== g) });
+                          }}
+                        /> {g}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <label>
+                  {label}
+                  <input
+                    type={type}
+                    value={form[key]}
+                    onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                    required
+                  />
+                </label>
+              )}
+            </div>
           ))}
           {error && <div className="alert">{error}</div>}
           <div className="modal-actions">
@@ -541,7 +568,7 @@ function ShowManagement({ shows, setShows, loading }) {
 
 // ─── Add Movie form ───────────────────────────────────────────────────────────
 const emptyMovie = {
-  title: '', description: '', genre: '', language: '',
+  title: '', description: '', genre: [], language: '',
   durationMinutes: 120, rating: 7, posterUrl: '', trailerUrl: '', releaseDate: ''
 };
 
@@ -584,15 +611,37 @@ function AddMovieForm({ movies, setMovies }) {
       <span className="premium-label"><MonitorPlay size={14} /> Catalog</span>
       <h2>Add Movie</h2>
       {Object.keys(emptyMovie).map((key) => (
-        <label key={key}>
-          {movieLabelMap[key] || key}
-          <input
-            type={key === 'releaseDate' ? 'date' : ['durationMinutes', 'rating'].includes(key) ? 'number' : 'text'}
-            value={form[key]}
-            onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-            required
-          />
-        </label>
+        <div key={key}>
+          {key === 'genre' ? (
+            <div className="form-group" style={{ marginBottom: '14px' }}>
+              <label style={{ display: 'block', marginBottom: '8px' }}>{movieLabelMap[key]}</label>
+              <div className="genre-grid">
+                {ALLOWED_GENRES.map(g => (
+                  <label key={g} className="genre-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={form[key].includes(g)}
+                      onChange={(e) => {
+                        if (e.target.checked) setForm({ ...form, [key]: [...form[key], g] });
+                        else setForm({ ...form, [key]: form[key].filter(x => x !== g) });
+                      }}
+                    /> {g}
+                  </label>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <label>
+              {movieLabelMap[key] || key}
+              <input
+                type={key === 'releaseDate' ? 'date' : ['durationMinutes', 'rating'].includes(key) ? 'number' : 'text'}
+                value={form[key]}
+                onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                required
+              />
+            </label>
+          )}
+        </div>
       ))}
       {message && <div className="success">{message}</div>}
       {error && <div className="alert">{error}</div>}

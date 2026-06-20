@@ -207,6 +207,7 @@ nav a.active::after {
   overflow: hidden;
   border-radius: 28px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  min-width: 0;
 }
 
 /* Blurred full-bleed background */
@@ -214,6 +215,7 @@ nav a.active::after {
   content: '';
   position: absolute;
   inset: 0;
+  z-index: -1;
   background: var(--hero-image) center / cover;
   filter: blur(40px) saturate(1.3) brightness(0.35);
   transform: scale(1.06);
@@ -420,6 +422,7 @@ nav a.active::after {
 
 .movie-rail {
   margin-top: 40px;
+  min-width: 0;
 }
 
 .rail-heading {
@@ -489,11 +492,17 @@ nav a.active::after {
   color: var(--text);
 }
 
-.poster-tags {
+.poster-meta {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 6px;
-  flex-wrap: nowrap;
+  margin-top: 4px;
+}
+
+.poster-genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 .poster-tag {
@@ -516,6 +525,8 @@ nav a.active::after {
   font-size: 0.74rem;
   font-weight: 700;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .poster-dot {
@@ -1171,6 +1182,31 @@ h3 {
   margin-bottom: 18px;
 }
 
+.rail-nav {
+  display: flex;
+  gap: 8px;
+}
+
+.rail-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.rail-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.05);
+}
+
 .rail-heading.compact {
   margin-bottom: 14px;
 }
@@ -1184,6 +1220,7 @@ h3 {
   overflow-x: auto;
   padding: 4px 4px 18px;
   scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
 }
 
 .showtime-row {
@@ -3471,4 +3508,33 @@ select option {
   width: 100%;
   height: 100%;
   border: none;
+}
+
+/* End of global styles */
+
+.genre-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+}
+
+.genre-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.genre-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--gold);
 }

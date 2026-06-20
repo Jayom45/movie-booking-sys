@@ -1,10 +1,9 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { CalendarDays, ChevronRight, Clock, MapPin, Play, Search, Star, Ticket, TrendingUp, Clapperboard } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { CalendarDays, ChevronRight, ChevronLeft, Clock, MapPin, Play, Search, Star, Ticket, TrendingUp, Clapperboard } from 'lucide-react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api.js';
-
-const filters = ['All', 'Thriller', 'Action Comedy', 'Sci-Fi', 'English', 'Hindi'];
+import { ALLOWED_GENRES, getValidGenres } from '../utils.js';
 
 function formatTime(value) {
   return new Date(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -40,10 +39,13 @@ function MoviePoster({ movie, index }) {
         </div>
         <div className="poster-info">
           <h3>{movie.title}</h3>
-          <div className="poster-tags">
-            <span className="poster-tag">{movie.genre}</span>
-            <span className="poster-dot">·</span>
-            <span className="poster-lang">{movie.language}</span>
+          <div className="poster-meta">
+            <div className="poster-genres">
+              {getValidGenres(movie.genre).slice(0, 3).map((g) => (
+                <span key={g} className="poster-tag">{g}</span>
+              ))}
+            </div>
+            <div className="poster-lang">{movie.language}</div>
           </div>
         </div>
       </Link>
@@ -56,6 +58,15 @@ function SectionTag({ children, color }) {
 }
 
 function MovieRail({ title, kicker, movies, accent, icon: Icon }) {
+  const rowRef = useRef(null);
+
+  const scroll = (direction) => {
+    if (rowRef.current) {
+      const amount = direction === 'left' ? -600 : 600;
+      rowRef.current.scrollBy({ left: amount, behavior: 'smooth' });
+    }
+  };
+
   if (movies.length === 0) return null;
   return (
     <motion.section
@@ -73,9 +84,16 @@ function MovieRail({ title, kicker, movies, accent, icon: Icon }) {
             <h2 className="rail-title">{title}</h2>
           </div>
         </div>
-        <ChevronRight size={20} className="rail-chevron" />
+        <div className="rail-nav">
+          <button className="rail-nav-btn" onClick={() => scroll('left')} aria-label="Scroll left">
+            <ChevronLeft size={20} />
+          </button>
+          <button className="rail-nav-btn" onClick={() => scroll('right')} aria-label="Scroll right">
+            <ChevronRight size={20} />
+          </button>
+        </div>
       </div>
-      <div className="poster-row">
+      <div className="poster-row" ref={rowRef}>
         {movies.map((movie, index) => (
           <MoviePoster movie={movie} index={index} key={`${title}-${movie._id}`} />
         ))}
@@ -137,14 +155,37 @@ export default function Home() {
     return () => clearTimeout(handle);
   }, [search, activeCity]);
 
+  // 5. Home Page Filters - Hardcoded to strictly allowed genres
+  const genres = ['All', ...ALLOWED_GENRES];
+
   const filteredMovies = useMemo(() => {
     if (activeFilter === 'All') return movies;
-    return movies.filter((m) => m.genre === activeFilter || m.language === activeFilter);
+    return movies.filter((m) => getValidGenres(m.genre).includes(activeFilter));
   }, [activeFilter, movies]);
 
-  const featured = filteredMovies[0] || movies[0];
-  const trending = [...filteredMovies].sort((a, b) => b.rating - a.rating);
-  const comingSoon = [...filteredMovies].reverse();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const releasedMovies = filteredMovies.filter(m => new Date(m.releaseDate) <= today);
+  const upcomingMovies = filteredMovies.filter(m => new Date(m.releaseDate) > today);
+
+  const featured = [...releasedMovies].sort((a, b) => (b.rating || 0) - (a.rating || 0))[0] || releasedMovies[0];
+
+  const nowShowing = releasedMovies;
+
+  // Fix 2: Trending logic (top 5 by rating descending, released only)
+  const trending = useMemo(() => {
+    return [...releasedMovies]
+      .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+      .slice(0, 5);
+  }, [releasedMovies]);
+
+  // Fix 3: Coming Soon logic (future release dates only, sort asc)
+  const comingSoon = useMemo(() => {
+    return [...upcomingMovies]
+      .sort((a, b) => new Date(a.releaseDate) - new Date(b.releaseDate));
+  }, [upcomingMovies]);
+
   const spotlightShows = shows.slice(0, 6);
 
   return (
@@ -186,7 +227,9 @@ export default function Home() {
                 <Star size={13} fill="currentColor" style={{ color: 'var(--gold)' }} />
                 {featured.rating.toFixed(1)} / 10
               </span>
-              <span className="hero-meta-chip">{featured.genre}</span>
+              <span className="hero-meta-chip">
+                {Array.isArray(featured.genre) ? featured.genre.join(', ') : featured.genre}
+              </span>
               <span className="hero-meta-chip">
                 <Clock size={13} />
                 {featured.durationMinutes} min
@@ -251,7 +294,7 @@ export default function Home() {
 
       {/* ── Genre filter ───────────────────────────────────── */}
       <div className="chip-row genre-row">
-        {filters.map((filter) => (
+        {genres.map((filter) => (
           <button
             className={activeFilter === filter ? 'chip active' : 'chip'}
             key={filter}
@@ -281,7 +324,7 @@ export default function Home() {
           <MovieRail
             title="Now Showing"
             kicker="In theatres now"
-            movies={filteredMovies}
+            movies={nowShowing}
             accent="gold"
             icon={Clapperboard}
           />

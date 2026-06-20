@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { CalendarClock, IndianRupee, MapPin, MessageSquare, Pencil, ShieldCheck, Sofa, Star, Ticket, Trash2 } from 'lucide-react';
+import { CalendarClock, IndianRupee, MapPin, MessageSquare, Pencil, Play, ShieldCheck, Sofa, Star, Ticket, Trash2, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
@@ -9,6 +9,13 @@ const rows = ['A', 'B', 'C', 'D'];
 
 function dateKey(value) {
   return new Date(value).toISOString().slice(0, 10);
+}
+
+function getYouTubeEmbedUrl(url) {
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  return match && match[2].length === 11 ? `https://www.youtube.com/embed/${match[2]}` : null;
 }
 
 function formatDate(value) {
@@ -369,6 +376,7 @@ export default function MovieDetails({ user }) {
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
   const [selectedSeats, setSelectedSeats] = useState([]);
+  const [showTrailer, setShowTrailer] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -455,6 +463,18 @@ export default function MovieDetails({ user }) {
               <span><MessageSquare size={16} /> {movie.reviewCount} {movie.reviewCount === 1 ? 'review' : 'reviews'}</span>
             )}
           </div>
+
+          {movie.trailerUrl && getYouTubeEmbedUrl(movie.trailerUrl) && (
+            <div className="hero-actions" style={{ marginTop: '16px', marginBottom: '20px' }}>
+              <button 
+                className="button glass btn-trailer" 
+                onClick={() => setShowTrailer(true)}
+              >
+                <Play size={16} /> Watch Trailer
+              </button>
+            </div>
+          )}
+
           <div className="mini-facts horizontal">
             <span><Sofa size={16} /> Reserved seating</span>
             <span><ShieldCheck size={16} /> Secure checkout</span>
@@ -545,6 +565,34 @@ export default function MovieDetails({ user }) {
         user={user}
         onMovieRatingUpdate={loadMovie}
       />
+
+      <AnimatePresence>
+        {showTrailer && movie.trailerUrl && (
+          <div className="modal-backdrop trailer-backdrop" onClick={() => setShowTrailer(false)}>
+            <motion.div 
+              className="trailer-modal-box"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="trailer-header">
+                <h3>{movie.title} - Trailer</h3>
+                <button className="modal-close-btn" onClick={() => setShowTrailer(false)}><X size={24} /></button>
+              </div>
+              <div className="video-wrapper">
+                <iframe
+                  src={getYouTubeEmbedUrl(movie.trailerUrl)}
+                  title="YouTube video player"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }

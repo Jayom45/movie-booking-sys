@@ -100,6 +100,7 @@ const movieFields = [
   { key: 'language', label: 'Language', type: 'text' },
   { key: 'durationMinutes', label: 'Duration (mins)', type: 'number' },
   { key: 'posterUrl', label: 'Poster URL', type: 'text' },
+  { key: 'trailerUrl', label: 'Trailer URL', type: 'text' },
   { key: 'releaseDate', label: 'Release Date', type: 'date' }
 ];
 
@@ -111,6 +112,7 @@ function MovieEditModal({ movie, onSave, onClose }) {
     language: movie.language,
     durationMinutes: movie.durationMinutes,
     posterUrl: movie.posterUrl,
+    trailerUrl: movie.trailerUrl || '',
     releaseDate: movie.releaseDate ? new Date(movie.releaseDate).toISOString().slice(0, 10) : ''
   });
   const [saving, setSaving] = useState(false);
@@ -540,7 +542,7 @@ function ShowManagement({ shows, setShows, loading }) {
 // ─── Add Movie form ───────────────────────────────────────────────────────────
 const emptyMovie = {
   title: '', description: '', genre: '', language: '',
-  durationMinutes: 120, rating: 7, posterUrl: '', releaseDate: ''
+  durationMinutes: 120, rating: 7, posterUrl: '', trailerUrl: '', releaseDate: ''
 };
 
 const movieLabelMap = {

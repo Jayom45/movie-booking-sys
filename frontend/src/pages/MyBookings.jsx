@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { CalendarClock, CheckCircle2, Hash, MapPin, QrCode, Ticket, XCircle, Download } from 'lucide-react';
 import QRCode from 'qrcode';
 import { useEffect, useState } from 'react';
@@ -211,6 +211,7 @@ export default function MyBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [filter, setFilter] = useState('all');
 
   useEffect(() => {
     api('/bookings/mine')
@@ -230,6 +231,24 @@ export default function MyBookings() {
     }
   };
 
+  // ─── Filter Logic ───
+  const now = new Date();
+  const cancelledBookings = bookings.filter(b => b.status === 'cancelled');
+  const upcomingBookings = bookings.filter(b => b.status !== 'cancelled' && new Date(b.show.showTime) > now);
+  const completedBookings = bookings.filter(b => b.status !== 'cancelled' && new Date(b.show.showTime) <= now);
+
+  const displayedBookings = filter === 'all' ? bookings :
+                            filter === 'upcoming' ? upcomingBookings :
+                            filter === 'completed' ? completedBookings :
+                            cancelledBookings;
+
+  const counts = {
+    all: bookings.length,
+    upcoming: upcomingBookings.length,
+    completed: completedBookings.length,
+    cancelled: cancelledBookings.length
+  };
+
   return (
     <section>
       <div className="page-hero compact-hero">
@@ -237,6 +256,39 @@ export default function MyBookings() {
         <h1>My Bookings</h1>
         <p>All confirmed seats, showtimes, and QR ticket passes in one premium library.</p>
       </div>
+
+      {/* ── Filters ── */}
+      {!loading && !error && bookings.length > 0 && (
+        <div className="filter-tabs" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '10px', marginTop: '20px' }}>
+          {[
+            { id: 'all', label: 'All', count: counts.all },
+            { id: 'upcoming', label: 'Upcoming', count: counts.upcoming },
+            { id: 'completed', label: 'Completed', count: counts.completed },
+            { id: 'cancelled', label: 'Cancelled', count: counts.cancelled },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setFilter(tab.id)}
+              style={{
+                padding: '8px 16px',
+                borderRadius: '999px',
+                border: `1px solid ${filter === tab.id ? 'var(--gold)' : 'rgba(255,255,255,0.1)'}`,
+                background: filter === tab.id ? 'rgba(250, 204, 21, 0.1)' : 'transparent',
+                color: filter === tab.id ? 'var(--gold)' : '#9ca3af',
+                fontWeight: filter === tab.id ? 'bold' : '500',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              {tab.label} <span style={{ opacity: 0.6, fontSize: '0.8em' }}>({tab.count})</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {error && <div className="alert">{error}</div>}
 
@@ -253,17 +305,28 @@ export default function MyBookings() {
             </div>
           ))}
         </div>
-      ) : bookings.length === 0 && !error ? (
+      ) : displayedBookings.length === 0 && !error ? (
         <div className="empty-state">
           <Ticket size={34} />
-          <h2>No bookings yet</h2>
-          <p>Your confirmed movie tickets will appear here.</p>
+          <h2>No bookings found</h2>
+          <p>You have no {filter !== 'all' ? filter : ''} bookings.</p>
         </div>
       ) : (
         <div className="booking-list" style={{ marginTop: '22px' }}>
-          {bookings.map((booking, index) => (
-            <BookingTicket key={booking._id} booking={booking} index={index} onCancel={handleCancelBooking} />
-          ))}
+          <AnimatePresence mode="popLayout">
+            {displayedBookings.map((booking, index) => (
+              <motion.div
+                key={booking._id}
+                layout
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.25 }}
+              >
+                <BookingTicket booking={booking} index={index} onCancel={handleCancelBooking} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       )}
     </section>

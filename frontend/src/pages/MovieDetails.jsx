@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { CalendarClock, IndianRupee, MapPin, MessageSquare, Pencil, ShieldCheck, Sofa, Star, Ticket, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 
 const rows = ['A', 'B', 'C', 'D'];
@@ -362,6 +362,7 @@ function ReviewSection({ movieId, movie, user, onMovieRatingUpdate }) {
 // ─── Main MovieDetails Page ───────────────────────────────────────────────────
 export default function MovieDetails({ user }) {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [movie, setMovie] = useState(null);
   const [shows, setShows] = useState([]);
   const [selectedShowId, setSelectedShowId] = useState('');
@@ -422,20 +423,17 @@ export default function MovieDetails({ user }) {
     setSelectedSeats((current) => (current.includes(seat) ? current.filter((item) => item !== seat) : [...current, seat]));
   }
 
-  async function bookTickets() {
-    try {
-      setError('');
-      setMessage('');
-      await api('/bookings', {
-        method: 'POST',
-        body: JSON.stringify({ showId: selectedShowId, seats: selectedSeats })
-      });
-      await loadMovie();
-      setSelectedSeats([]);
-      setMessage('Booking confirmed. Your tickets are in My Bookings.');
-    } catch (err) {
-      setError(err.message);
-    }
+  function proceedToCheckout() {
+    if (selectedSeats.length === 0) return;
+    navigate('/checkout', {
+      state: {
+        movie,
+        show: selectedShow,
+        seats: selectedSeats,
+        baseTotal: total,
+        convenienceFee: 40 // Flat fee in Rs
+      }
+    });
   }
 
   if (error && !movie) return <div className="alert">{error}</div>;
@@ -525,7 +523,7 @@ export default function MovieDetails({ user }) {
                   <strong><IndianRupee size={16} /> {total}</strong>
                 </div>
                 {user ? (
-                  <button className="button primary" onClick={bookTickets} disabled={selectedSeats.length === 0}><Ticket size={17} /> Confirm Booking</button>
+                  <button className="button primary" onClick={proceedToCheckout} disabled={selectedSeats.length === 0}><Ticket size={17} /> Continue to Checkout</button>
                 ) : (
                   <Link className="button primary" to="/login">Login to Book</Link>
                 )}

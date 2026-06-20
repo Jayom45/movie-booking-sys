@@ -8,6 +8,7 @@ import Home from './pages/Home.jsx';
 import Login from './pages/Login.jsx';
 import MovieDetails from './pages/MovieDetails.jsx';
 import MyBookings from './pages/MyBookings.jsx';
+import Checkout from './pages/Checkout.jsx';
 import Offers from './pages/Offers.jsx';
 import Register from './pages/Register.jsx';
 import { api, clearSession, getSession, saveSession } from './api.js';
@@ -89,6 +90,14 @@ export default function App() {
                 element={
                   <RequireAuth user={auth.user}>
                     <MyBookings />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/checkout"
+                element={
+                  <RequireAuth user={auth.user}>
+                    <Checkout />
                   </RequireAuth>
                 }
               />

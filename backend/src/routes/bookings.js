@@ -72,4 +72,35 @@ router.post('/', protect, async (req, res) => {
   }
 });
 
+// ─── POST /api/bookings/:id/cancel ───────────────────────────────────────────
+router.post('/:id/cancel', protect, async (req, res) => {
+  try {
+    const booking = await Booking.findOne({ _id: req.params.id, user: req.user._id });
+
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+
+    if (booking.status === 'cancelled') {
+      return res.status(400).json({ message: 'Booking is already cancelled' });
+    }
+
+    // Attempt to free the seats in the associated Show
+    if (booking.show && booking.seats && booking.seats.length > 0) {
+      await Show.updateOne(
+        { _id: booking.show },
+        { $pullAll: { bookedSeats: booking.seats } }
+      );
+    }
+
+    // Update booking status
+    booking.status = 'cancelled';
+    await booking.save();
+
+    res.json(booking);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 export default router;

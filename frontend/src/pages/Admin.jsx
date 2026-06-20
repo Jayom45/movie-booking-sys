@@ -543,6 +543,17 @@ const emptyMovie = {
   durationMinutes: 120, rating: 7, posterUrl: '', releaseDate: ''
 };
 
+const movieLabelMap = {
+  title: 'Title',
+  description: 'Description',
+  genre: 'Genre',
+  language: 'Language',
+  durationMinutes: 'Duration (min)',
+  rating: 'Rating (0–10)',
+  posterUrl: 'Poster URL',
+  releaseDate: 'Release Date'
+};
+
 function AddMovieForm({ movies, setMovies }) {
   const [form, setForm] = useState(emptyMovie);
   const [saving, setSaving] = useState(false);
@@ -572,7 +583,7 @@ function AddMovieForm({ movies, setMovies }) {
       <h2>Add Movie</h2>
       {Object.keys(emptyMovie).map((key) => (
         <label key={key}>
-          {key}
+          {movieLabelMap[key] || key}
           <input
             type={key === 'releaseDate' ? 'date' : ['durationMinutes', 'rating'].includes(key) ? 'number' : 'text'}
             value={form[key]}
@@ -590,6 +601,15 @@ function AddMovieForm({ movies, setMovies }) {
 
 // ─── Add Show form ────────────────────────────────────────────────────────────
 const emptyShow = { movie: '', theater: '', city: '', screen: '', showTime: '', price: 250, totalSeats: 40 };
+
+const showLabelMap = {
+  theater: 'Theatre',
+  city: 'City',
+  screen: 'Screen',
+  showTime: 'Show Time',
+  price: 'Price (Rs)',
+  totalSeats: 'Total Seats'
+};
 
 function AddShowForm({ movies, shows, setShows }) {
   const [form, setForm] = useState(emptyShow);
@@ -619,7 +639,7 @@ function AddShowForm({ movies, shows, setShows }) {
       <span className="premium-label"><Settings size={14} /> Scheduling</span>
       <h2>Add Show</h2>
       <label>
-        movie
+        Movie
         <select value={form.movie} onChange={(e) => setForm({ ...form, movie: e.target.value })} required>
           <option value="">Select movie</option>
           {movies.filter((m) => m.isActive).map((m) => <option key={m._id} value={m._id}>{m.title}</option>)}
@@ -627,7 +647,7 @@ function AddShowForm({ movies, shows, setShows }) {
       </label>
       {Object.keys(emptyShow).filter((k) => k !== 'movie').map((key) => (
         <label key={key}>
-          {key}
+          {showLabelMap[key] || key}
           <input
             type={key === 'showTime' ? 'datetime-local' : ['price', 'totalSeats'].includes(key) ? 'number' : 'text'}
             value={form[key]}

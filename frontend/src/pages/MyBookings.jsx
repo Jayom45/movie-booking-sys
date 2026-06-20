@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { CalendarClock, CheckCircle2, Hash, MapPin, QrCode, Ticket } from 'lucide-react';
+import { CalendarClock, CheckCircle2, Hash, MapPin, QrCode, Ticket, XCircle } from 'lucide-react';
 import QRCode from 'qrcode';
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
@@ -54,8 +54,9 @@ function QRTicketCode({ booking }) {
 }
 
 // ─── Single ticket card ───────────────────────────────────────────────────────
-function BookingTicket({ booking, index }) {
+function BookingTicket({ booking, index, onCancel }) {
   const [qrOpen, setQrOpen] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const show = booking.show;
   const movie = show.movie;
   const ref = booking.bookingRef;
@@ -76,9 +77,15 @@ function BookingTicket({ booking, index }) {
       {/* ── Centre: details ── */}
       <div className="ticket-body">
         <div className="ticket-status-row">
-          <span className="premium-label ticket-confirmed-label">
-            <CheckCircle2 size={14} /> Confirmed
-          </span>
+          {booking.status === 'cancelled' ? (
+            <span className="premium-label ticket-cancelled-label">
+              <XCircle size={14} /> Cancelled
+            </span>
+          ) : (
+            <span className="premium-label ticket-confirmed-label">
+              <CheckCircle2 size={14} /> Confirmed
+            </span>
+          )}
           {ref && (
             <span className="ticket-ref">
               <Hash size={12} /> {ref}
@@ -124,17 +131,34 @@ function BookingTicket({ booking, index }) {
           </div>
         </div>
 
-        {/* ── QR toggle button ── */}
-        <button
-          className={`qr-toggle-btn ${qrOpen ? 'qr-toggle-btn-active' : ''}`}
-          onClick={() => setQrOpen((prev) => !prev)}
-        >
-          <QrCode size={16} />
-          {qrOpen ? 'Hide QR Ticket' : 'Show QR Ticket'}
-        </button>
+        {/* ── Action buttons ── */}
+        <div className="ticket-actions">
+          {booking.status !== 'cancelled' && (
+            <>
+              <button
+                className={`qr-toggle-btn ${qrOpen ? 'qr-toggle-btn-active' : ''}`}
+                onClick={() => setQrOpen((prev) => !prev)}
+              >
+                <QrCode size={16} />
+                {qrOpen ? 'Hide QR Ticket' : 'Show QR Ticket'}
+              </button>
+              <button
+                className="btn-cancel"
+                onClick={async () => {
+                  setCancelling(true);
+                  await onCancel(booking._id);
+                  setCancelling(false);
+                }}
+                disabled={cancelling}
+              >
+                {cancelling ? 'Cancelling...' : 'Cancel Booking'}
+              </button>
+            </>
+          )}
+        </div>
 
         {/* ── Expandable QR panel ── */}
-        {qrOpen && (
+        {qrOpen && booking.status !== 'cancelled' && (
           <motion.div
             className="qr-panel"
             initial={{ opacity: 0, height: 0 }}
@@ -177,6 +201,17 @@ export default function MyBookings() {
       .finally(() => setLoading(false));
   }, []);
 
+  const handleCancelBooking = async (bookingId) => {
+    try {
+      const updatedBooking = await api(`/bookings/${bookingId}/cancel`, { method: 'POST' });
+      setBookings((prevBookings) =>
+        prevBookings.map((b) => (b._id === bookingId ? { ...b, status: updatedBooking.status } : b))
+      );
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   return (
     <section>
       <div className="page-hero compact-hero">
@@ -209,7 +244,7 @@ export default function MyBookings() {
       ) : (
         <div className="booking-list" style={{ marginTop: '22px' }}>
           {bookings.map((booking, index) => (
-            <BookingTicket key={booking._id} booking={booking} index={index} />
+            <BookingTicket key={booking._id} booking={booking} index={index} onCancel={handleCancelBooking} />
           ))}
         </div>
       )}

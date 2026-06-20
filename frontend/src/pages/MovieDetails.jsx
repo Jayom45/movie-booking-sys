@@ -5,7 +5,7 @@ import { Link, useParams } from 'react-router-dom';
 import { api } from '../api.js';
 
 const rows = ['A', 'B', 'C', 'D'];
-const seats = rows.flatMap((row) => Array.from({ length: 10 }, (_, index) => `${row}${index + 1}`));
+// seats generation moved dynamically inside MovieDetails component
 
 function dateKey(value) {
   return new Date(value).toISOString().slice(0, 10);
@@ -392,6 +392,24 @@ export default function MovieDetails({ user }) {
   const selectedShow = useMemo(() => shows.find((show) => show._id === selectedShowId), [shows, selectedShowId]);
   const total = selectedSeats.length * (selectedShow?.price || 0);
 
+  const dynamicSeats = useMemo(() => {
+    if (!selectedShow) return [];
+    const totalSeats = selectedShow.totalSeats || 40;
+    const generated = [];
+    const rowsCount = Math.ceil(totalSeats / 10);
+    
+    for (let r = 0; r < rowsCount; r++) {
+      // For >260 seats, it cycles back to A (A-Z), but usually screens are smaller.
+      const rowChar = String.fromCharCode(65 + (r % 26)); 
+      for (let s = 1; s <= 10; s++) {
+        if (generated.length < totalSeats) {
+          generated.push(`${rowChar}${s}`);
+        }
+      }
+    }
+    return generated;
+  }, [selectedShow]);
+
   useEffect(() => {
     if (visibleShows.length > 0 && !visibleShows.some((show) => show._id === selectedShowId)) {
       setSelectedShowId(visibleShows[0]._id);
@@ -491,7 +509,7 @@ export default function MovieDetails({ user }) {
                 <span><i className="legend-dot booked" /> Booked</span>
               </div>
               <div className="seat-grid">
-                {seats.map((seat) => {
+                {dynamicSeats.map((seat) => {
                   const booked = selectedShow.bookedSeats.includes(seat);
                   const selected = selectedSeats.includes(seat);
                   return (

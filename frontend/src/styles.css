@@ -1809,7 +1809,7 @@ h3 {
 
 /* ── Global Footer ── */
 .global-footer {
-  margin-top: auto; /* Push to bottom */
+  margin-top: clamp(80px, 10vw, 120px);
   background: rgba(11, 15, 23, 0.85);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(24px);
@@ -1834,9 +1834,9 @@ h3 {
 .footer-content {
   position: relative;
   z-index: 1;
-  max-width: 1200px;
+  width: min(1380px, calc(100% - 36px));
   margin: 0 auto;
-  padding: 64px clamp(20px, 5vw, 40px);
+  padding: 64px 0;
 }
 
 .footer-grid {
@@ -1940,11 +1940,11 @@ h3 {
   position: relative;
   z-index: 1;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
-  padding: 24px clamp(20px, 5vw, 40px);
+  padding: 24px 0;
 }
 
 .footer-bottom-content {
-  max-width: 1200px;
+  width: min(1380px, calc(100% - 36px));
   margin: 0 auto;
   display: flex;
   justify-content: space-between;

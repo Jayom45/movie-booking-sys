@@ -130,6 +130,12 @@ function BookingTicket({ booking, index, onCancel }) {
             <div>
               <span className="ticket-info-label">Total Paid</span>
               <strong className="ticket-price">Rs {booking.totalAmount}</strong>
+              {booking.couponCode && (
+                <div style={{ fontSize: '0.75rem', marginTop: '4px', opacity: 0.8 }}>
+                  <div>Coupon: {booking.couponCode}</div>
+                  <div style={{ color: 'var(--green)' }}>Discount: -Rs {booking.discountAmount}</div>
+                </div>
+              )}
             </div>
           </div>
         </div>

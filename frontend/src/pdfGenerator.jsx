@@ -78,6 +78,12 @@ function TicketTemplate({ booking, qrDataUrl, onReady }) {
               <div>
                 <p style={{ margin: 0, fontSize: '11px', color: '#9ca3af', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.5px' }}>Amount Paid</p>
                 <p style={{ margin: '6px 0 0 0', fontSize: '16px', fontWeight: '800', color: '#111827' }}>Rs. {booking.totalAmount}</p>
+                {booking.couponCode && (
+                  <div style={{ marginTop: '8px', fontSize: '11px', color: '#6b7280', fontWeight: '600' }}>
+                    <div>Original: Rs. {booking.originalAmount}</div>
+                    <div style={{ color: '#059669' }}>Discount ({booking.couponCode}): -Rs. {booking.discountAmount}</div>
+                  </div>
+                )}
               </div>
               <div>
                 <p style={{ margin: 0, fontSize: '11px', color: '#9ca3af', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.5px' }}>Payment Status</p>

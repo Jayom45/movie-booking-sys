@@ -31,10 +31,31 @@ router.get('/mine', protect, async (req, res) => {
   res.json(bookings);
 });
 
+// ─── POST /api/bookings/validate-coupon ──────────────────────────────────────
+router.post('/validate-coupon', protect, async (req, res) => {
+  try {
+    const { code, amount } = req.body;
+    if (!code) return res.status(400).json({ message: 'Coupon code required' });
+    
+    const c = code.toUpperCase();
+    if (c === 'MOVIE20') return res.json({ discount: amount * 0.2, code: c });
+    if (c === 'WEEKEND25') return res.json({ discount: amount * 0.25, code: c });
+    if (c === 'CARD150') return res.json({ discount: 150, code: c });
+    if (c === 'HELLOCINE') return res.json({ discount: amount * 0.5, code: c });
+    if (c === 'POPCORN99') return res.json({ discount: 99, code: c });
+    if (c === 'EXPIRED') return res.status(400).json({ message: 'Coupon Expired' });
+    if (c === 'INACTIVE') return res.status(400).json({ message: 'Coupon Not Active' });
+    
+    return res.status(404).json({ message: 'Invalid Coupon' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // ─── POST /api/bookings ──────────────────────────────────────────────────────
 router.post('/', protect, async (req, res) => {
   try {
-    const { showId, seats } = req.body;
+    const { showId, seats, couponCode } = req.body;
 
     if (!showId || !Array.isArray(seats) || seats.length === 0) {
       return res.status(400).json({ message: 'Show and at least one seat are required' });
@@ -72,14 +93,30 @@ router.post('/', protect, async (req, res) => {
       return { number: seat, category, price };
     });
 
-    const totalAmount = seatDetails.reduce((sum, s) => sum + s.price, 0);
+    const originalAmount = seatDetails.reduce((sum, s) => sum + s.price, 0);
+    let discountAmount = 0;
+    
+    if (couponCode) {
+      const c = couponCode.toUpperCase();
+      if (c === 'MOVIE20') discountAmount = originalAmount * 0.2;
+      else if (c === 'WEEKEND25') discountAmount = originalAmount * 0.25;
+      else if (c === 'CARD150') discountAmount = 150;
+      else if (c === 'HELLOCINE') discountAmount = originalAmount * 0.5;
+      else if (c === 'POPCORN99') discountAmount = 99;
+    }
+    
+    const finalAmount = Math.max(0, originalAmount - discountAmount);
 
     const booking = await Booking.create({
       user: req.user._id,
       show: show._id,
       seats,
       seatDetails,
-      totalAmount,
+      originalAmount,
+      discountAmount,
+      finalAmount,
+      couponCode: couponCode ? couponCode.toUpperCase() : null,
+      totalAmount: finalAmount, // Overrides totalAmount so legacy analytics use finalAmount
       bookingRef: generateBookingRef()
     });
 
@@ -172,6 +209,10 @@ Date: ${dateStr}
 Time: ${timeStr}
 Seats: ${booking.seatDetails?.length > 0 ? booking.seatDetails.map(s => `${s.number} (${s.category})`).join(', ') : booking.seats.join(', ')}
 
+${booking.couponCode ? `Coupon Used: ${booking.couponCode}
+Discount Applied: Rs. ${booking.discountAmount}
+Final Amount Paid: Rs. ${booking.finalAmount}
+` : ''}
 Enjoy your show.
 
 Team CineBook`,

@@ -21,6 +21,11 @@ export default function Checkout() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
 
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponError, setCouponError] = useState('');
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
+
   // Validate state
   const state = location.state;
   useEffect(() => {
@@ -42,7 +47,26 @@ export default function Checkout() {
     return acc;
   }, {});
   const categoryText = Object.entries(categoryCounts).map(([cat, count]) => `${count}x ${cat}`).join(', ');
-  const grandTotal = baseTotal + convenienceFee;
+  const subtotal = baseTotal + convenienceFee;
+  const grandTotal = appliedCoupon ? Math.max(0, subtotal - appliedCoupon.discount) : subtotal;
+
+  const validateCoupon = async () => {
+    if (!couponCode) return;
+    try {
+      setValidatingCoupon(true);
+      setCouponError('');
+      const data = await api('/bookings/validate-coupon', {
+        method: 'POST',
+        body: JSON.stringify({ code: couponCode, amount: baseTotal })
+      });
+      setAppliedCoupon({ code: data.code, discount: data.discount });
+    } catch (err) {
+      setCouponError(err.message);
+      setAppliedCoupon(null);
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
 
   const handlePayment = async () => {
     if (!selectedMethod) {
@@ -60,7 +84,7 @@ export default function Checkout() {
       // 2. Create the real booking
       await api('/bookings', {
         method: 'POST',
-        body: JSON.stringify({ showId: show._id, seats })
+        body: JSON.stringify({ showId: show._id, seats, couponCode: appliedCoupon?.code })
       });
 
       // 3. Show success state briefly, then redirect
@@ -143,10 +167,41 @@ export default function Checkout() {
               <span>Convenience Fee</span>
               <span>Rs {convenienceFee}</span>
             </div>
+            {appliedCoupon && (
+              <div className="price-row" style={{ color: 'var(--green)' }}>
+                <span>Coupon ({appliedCoupon.code})</span>
+                <span>-Rs {appliedCoupon.discount}</span>
+              </div>
+            )}
             <div className="price-row grand-total">
               <span>Total Amount</span>
               <strong><IndianRupee size={16} /> {grandTotal}</strong>
             </div>
+          </div>
+
+          <div className="coupon-section" style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+            <p className="eyebrow" style={{ marginBottom: '12px' }}>Apply Coupon</p>
+            <div className="coupon-input-group" style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+              <input 
+                type="text" 
+                placeholder="Enter Coupon Code" 
+                value={couponCode} 
+                onChange={e => setCouponCode(e.target.value.toUpperCase())} 
+                disabled={appliedCoupon || validatingCoupon}
+                style={{ flex: 1 }}
+              />
+              {!appliedCoupon ? (
+                <button type="button" className="button glass" onClick={validateCoupon} disabled={!couponCode || validatingCoupon}>
+                  {validatingCoupon ? '...' : 'Apply'}
+                </button>
+              ) : (
+                <button type="button" className="button glass" onClick={() => { setAppliedCoupon(null); setCouponCode(''); }}>
+                  Remove
+                </button>
+              )}
+            </div>
+            {couponError && <span style={{ color: 'var(--red)', fontSize: '0.85rem' }}>✗ {couponError}</span>}
+            {appliedCoupon && <span style={{ color: 'var(--green)', fontSize: '0.85rem' }}>✓ Coupon Applied!</span>}
           </div>
         </motion.div>
 

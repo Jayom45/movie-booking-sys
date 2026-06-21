@@ -47,6 +47,7 @@ router.get('/analytics', protect, adminOnly, async (req, res) => {
     let totalBookings = bookings.length;
     let totalCancelled = 0;
     let totalTicketsSold = 0;
+    let totalDiscountsGiven = 0;
 
     const movieStats = {}; // { movieId: { title, revenue, tickets } }
     const theatreStats = {}; // { theatreName: count }
@@ -58,6 +59,7 @@ router.get('/analytics', protect, adminOnly, async (req, res) => {
         // Successful booking
         totalRevenue += b.totalAmount || 0;
         totalTicketsSold += b.seats?.length || 0;
+        totalDiscountsGiven += b.discountAmount || 0;
 
         if (b.show) {
           // Theatre insights
@@ -111,6 +113,7 @@ router.get('/analytics', protect, adminOnly, async (req, res) => {
         totalRevenue,
         totalBookings,
         totalTicketsSold,
+        totalDiscountsGiven,
         cancellationRate: cancellationRate.toFixed(1)
       },
       insights: {

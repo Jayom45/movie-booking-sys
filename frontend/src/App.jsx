@@ -6,6 +6,7 @@ import Footer from './components/Footer.jsx';
 import Admin from './pages/Admin.jsx';
 import Cinemas from './pages/Cinemas.jsx';
 import Home from './pages/Home.jsx';
+import Landing from './pages/Landing.jsx';
 import Login from './pages/Login.jsx';
 import MovieDetails from './pages/MovieDetails.jsx';
 import MyBookings from './pages/MyBookings.jsx';
@@ -81,7 +82,8 @@ export default function App() {
         <AnimatePresence mode="wait">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
             <Routes>
-              <Route path="/" element={<Home selectedCity={selectedCity} />} />
+              <Route path="/" element={<Landing />} />
+              <Route path="/movies" element={<Home selectedCity={selectedCity} />} />
               <Route path="/cinemas" element={<Cinemas selectedCity={selectedCity} />} />
               <Route path="/offers" element={<Offers />} />
               <Route path="/movies/:id" element={<MovieDetails user={auth.user} />} />

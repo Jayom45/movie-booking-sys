@@ -204,7 +204,7 @@ export default function Nav({ user, onLogout, cities, selectedCity, onCityChange
         </Link>
 
       <nav>
-        <NavLink to="/">Movies</NavLink>
+        <NavLink to="/movies">Movies</NavLink>
         <NavLink to="/cinemas">Cinemas</NavLink>
         <NavLink to="/offers">Offers</NavLink>
         {user && <NavLink to="/bookings">My Bookings</NavLink>}

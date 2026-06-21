@@ -1,28 +1,94 @@
 :root {
   color-scheme: dark;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color: #f0f1f7;
-  background: #06070b;
+  font-family: var(--font-sans, Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+  color: var(--foreground, #f0f1f7);
+  background: var(--background, #06070b);
+  
+  /* Existing CineBook variables */
   --bg: #06070b;
   --panel: rgba(16, 18, 28, 0.82);
   --panel-hover: rgba(22, 25, 38, 0.94);
   --panel-strong: rgba(24, 27, 40, 0.96);
   --line: rgba(255, 255, 255, 0.13);
   --line-strong: rgba(255, 255, 255, 0.2);
-  --muted: #8e96a8;
-  --text: #f0f1f7;
-  --gold: #f3c969;
+  --muted: oklch(0.7 0.03 255); /* Replaced with Lovable muted */
+  --text: oklch(0.98 0.005 250);
+  --gold: oklch(0.86 0.17 92);
   --gold-dim: rgba(243, 201, 105, 0.18);
   --red: #ff3d55;
-  --cyan: #6ee7f9;
+  --cyan: oklch(0.78 0.13 232);
   --green: #62f0b7;
   --shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   --shadow-sm: 0 8px 24px rgba(0, 0, 0, 0.35);
   --shadow-lg: 0 40px 100px rgba(0, 0, 0, 0.65);
   --radius-card: 20px;
   --radius-input: 12px;
-  --nav-h: 64px;
+  --nav-h: 80px;
+
+  /* Lovable Cinematic Dark Navy Palette */
+  --background: oklch(0.16 0.04 260);
+  --foreground: oklch(0.98 0.005 250);
+  --ink: oklch(0.13 0.04 260);
+  --ink-2: oklch(0.19 0.045 262);
+  --ink-3: oklch(0.27 0.09 268);
+  --card: oklch(0.21 0.05 262 / 0.6);
+  --primary: oklch(0.66 0.18 254);
+  --gold-soft: oklch(0.82 0.15 80);
+  
+  --gradient-hero: radial-gradient(1200px 600px at 15% 10%, oklch(0.4 0.18 260 / 0.45), transparent 60%),
+                   radial-gradient(900px 500px at 85% 20%, oklch(0.55 0.18 232 / 0.35), transparent 60%),
+                   radial-gradient(800px 600px at 60% 90%, oklch(0.45 0.15 280 / 0.4), transparent 70%),
+                   linear-gradient(180deg, oklch(0.13 0.04 260), oklch(0.16 0.045 262));
+  --gradient-gold: linear-gradient(135deg, oklch(0.88 0.17 92), oklch(0.78 0.15 70));
+  --gradient-blue: linear-gradient(135deg, oklch(0.7 0.2 254), oklch(0.78 0.13 232));
+  
+  --shadow-glow-blue: 0 20px 60px -15px oklch(0.66 0.2 254 / 0.55);
+  --shadow-glow-gold: 0 20px 60px -15px oklch(0.86 0.17 92 / 0.45);
+  --shadow-card: 0 30px 80px -30px oklch(0.05 0.02 260 / 0.7);
 }
+
+/* Lovable Utilities */
+.glass {
+  background: linear-gradient(180deg, oklch(1 0 0 / 0.06), oklch(1 0 0 / 0.02));
+  border: 1px solid oklch(1 0 0 / 0.08);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+}
+
+.glass-strong {
+  background: linear-gradient(180deg, oklch(1 0 0 / 0.1), oklch(1 0 0 / 0.03));
+  border: 1px solid oklch(1 0 0 / 0.12);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+}
+
+.text-gradient-gold {
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.text-gradient-blue {
+  background: linear-gradient(135deg, oklch(0.95 0.02 250), oklch(0.75 0.18 240));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.glow-blue { box-shadow: var(--shadow-glow-blue); }
+.glow-gold { box-shadow: var(--shadow-glow-gold); }
+
+@keyframes float-y {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-14px); }
+}
+@keyframes orb-drift {
+  0%, 100% { transform: translate3d(0,0,0) scale(1); }
+  50% { transform: translate3d(40px,-30px,0) scale(1.08); }
+}
+.animate-float { animation: float-y 6s ease-in-out infinite; }
+.animate-orb { animation: orb-drift 14s ease-in-out infinite; }
 
 * {
   box-sizing: border-box;
@@ -35,24 +101,15 @@ html {
 body {
   min-height: 100vh;
   margin: 0;
-  background:
-    radial-gradient(ellipse at 15% 0%, rgba(255, 61, 85, 0.16) 0%, transparent 55%),
-    radial-gradient(ellipse at 85% 5%, rgba(110, 231, 249, 0.12) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 100%, rgba(98, 240, 183, 0.06) 0%, transparent 60%),
-    linear-gradient(180deg, #090b13 0%, #06070b 36%, #050506 100%);
+  background: var(--gradient-hero);
+  background-attachment: fixed;
+  color: var(--foreground);
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 body::before {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  content: "";
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
-  background-size: 52px 52px;
-  mask-image: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent 70%);
+  display: none;
 }
 
 a {
@@ -70,20 +127,35 @@ button {
   color: inherit;
 }
 
-.topbar {
-  position: sticky;
+.topbar-wrapper {
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 50;
+  padding: 16px;
+  pointer-events: none; /* Let clicks pass through the wrapper */
+}
+
+.topbar {
+  pointer-events: auto; /* Re-enable clicks for the actual navbar */
+  max-w-7xl: 1280px;
+  max-width: 1280px;
+  margin: 0 auto;
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 20px;
-  height: var(--nav-h);
-  padding: 0 clamp(18px, 4vw, 58px);
-  background: rgba(6, 7, 12, 0.86);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
+  height: 60px;
+  padding: 0 20px;
+  
+  /* Lovable Glass Strong Equivalent */
+  background: linear-gradient(180deg, oklch(1 0 0 / 0.1), oklch(1 0 0 / 0.03));
+  border: 1px solid oklch(1 0 0 / 0.12);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 }
 
 .brand,

@@ -147,11 +147,16 @@ function NavSearch() {
 
 export default function Nav({ user, onLogout, cities, selectedCity, onCityChange }) {
   return (
-    <motion.header className="topbar" initial={{ y: -24, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.45 }}>
-      <Link className="brand" to="/">
-        <Clapperboard size={24} />
-        <span>CineBook</span>
-      </Link>
+    <div className="topbar-wrapper">
+      <motion.header className="topbar" initial={{ y: -24, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.45 }}>
+        <Link className="brand" to="/" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="grid h-9 w-9 place-items-center rounded-xl bg-[image:var(--gradient-blue)] glow-blue" style={{ background: 'var(--gradient-blue)', borderRadius: '12px', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Ticket size={18} style={{ color: 'white' }} />
+          </div>
+          <span style={{ fontSize: '1.125rem', fontWeight: 'bold', letterSpacing: '-0.02em' }}>
+            Cine<span className="text-gradient-gold">Book</span>
+          </span>
+        </Link>
 
       <nav>
         <NavLink to="/">Movies</NavLink>
@@ -203,5 +208,6 @@ export default function Nav({ user, onLogout, cities, selectedCity, onCityChange
         )}
       </div>
     </motion.header>
+    </div>
   );
 }

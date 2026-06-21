@@ -194,75 +194,86 @@ export default function Home() {
       {/* ── Hero ──────────────────────────────────────────── */}
       <section
         className="home-hero"
-        style={{ '--hero-image': `url(${featured?.posterUrl || ''})` }}
+        style={{ position: 'relative', overflow: 'hidden', paddingTop: '140px', paddingBottom: '80px', borderBottom: '1px solid var(--color-border)' }}
       >
-        {/* Layered backdrop */}
-        <div className="hero-bg" aria-hidden="true" />
+        {/* ambient orbs from Lovable */}
+        <div className="pointer-events-none animate-orb" style={{ position: 'absolute', top: '-128px', left: '-128px', height: '480px', width: '480px', borderRadius: '50%', background: 'radial-gradient(circle, oklch(0.6 0.22 254 / 0.35), transparent 70%)' }} />
+        <div className="pointer-events-none animate-orb" style={{ position: 'absolute', top: '80px', right: '0', height: '520px', width: '520px', borderRadius: '50%', background: 'radial-gradient(circle, oklch(0.78 0.13 232 / 0.3), transparent 70%)' }} />
+        <div className="pointer-events-none" style={{ position: 'absolute', bottom: '0', left: '33%', height: '400px', width: '400px', borderRadius: '50%', background: 'radial-gradient(circle, oklch(0.86 0.17 92 / 0.18), transparent 70%)' }} />
 
-        {/* Content side */}
-        <motion.div
-          className="hero-content"
-          initial={{ opacity: 0, x: -28 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <div className="hero-eyebrow">
-            <Clapperboard size={14} />
-            Featured
-          </div>
-
-          <h1 className="hero-title">
-            {featured?.title || 'Your premium cinema night starts here.'}
-          </h1>
-
-          <p className="hero-desc">
-            {featured?.description
-              ? featured.description.slice(0, 160) + (featured.description.length > 160 ? '…' : '')
-              : 'Explore cinematic releases, premium screens, and instant seat booking.'}
-          </p>
-
-          {featured && (
-            <div className="hero-meta">
-              <span className="hero-meta-chip">
-                <Star size={13} fill="currentColor" style={{ color: 'var(--gold)' }} />
-                {featured.rating.toFixed(1)} / 10
-              </span>
-              <span className="hero-meta-chip">
-                {Array.isArray(featured.genre) ? featured.genre.join(', ') : featured.genre}
-              </span>
-              <span className="hero-meta-chip">
-                <Clock size={13} />
-                {featured.durationMinutes} min
-              </span>
-            </div>
-          )}
-
-          <div className="hero-actions">
-            {featured && (
-              <Link className="hero-btn-primary" to={`/movies/${featured._id}`}>
-                <Ticket size={18} />
-                Book Tickets
-              </Link>
-            )}
-            <Link className="hero-btn-secondary" to="/cinemas">
-              <Play size={16} />
-              All Cinemas
-            </Link>
-          </div>
-        </motion.div>
-
-        {/* Poster side */}
-        {featured && (
+        <div style={{ position: 'relative', zIndex: 10, display: 'grid', gridTemplateColumns: '1.05fr 0.95fr', gap: '56px', alignItems: 'center', maxWidth: '1280px', margin: '0 auto', padding: '0 20px' }}>
+          
+          {/* Content side */}
           <motion.div
-            className="hero-poster-wrap"
-            initial={{ opacity: 0, scale: 0.92, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+            initial={{ opacity: 0, x: -28 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
           >
-            <img className="hero-poster" src={featured.posterUrl} alt={featured.title} />
-            <div className="hero-poster-glow" aria-hidden="true" />
+            <div className="glass" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 12px', borderRadius: '999px', fontSize: '0.75rem', color: 'var(--muted)' }}>
+              <Clapperboard size={14} style={{ color: 'var(--gold)' }} />
+              Featured Release
+            </div>
+
+            <h1 style={{ fontSize: 'clamp(3rem, 5vw, 4.5rem)', fontWeight: '900', lineHeight: 1.05, letterSpacing: '-0.03em', marginTop: '24px', marginBottom: '24px' }}>
+              <span className="text-gradient-blue">Experience</span><br/>
+              {featured?.title || 'Your premium cinema night starts here.'}
+            </h1>
+
+            <p style={{ fontSize: '1.125rem', color: 'var(--muted)', maxWidth: '36rem', lineHeight: 1.6 }}>
+              {featured?.description
+                ? featured.description.slice(0, 160) + (featured.description.length > 160 ? '…' : '')
+                : 'Explore cinematic releases, premium screens, and instant seat booking.'}
+            </p>
+
+            {featured && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '32px', flexWrap: 'wrap' }}>
+                <span className="glass" style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600 }}>
+                  <Star size={14} fill="currentColor" className="text-gradient-gold" />
+                  <span className="text-gradient-gold">{featured.rating.toFixed(1)} / 10</span>
+                </span>
+                <span className="glass" style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '8px', fontSize: '0.85rem' }}>
+                  {Array.isArray(featured.genre) ? featured.genre.join(', ') : featured.genre}
+                </span>
+                <span className="glass" style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '8px', fontSize: '0.85rem' }}>
+                  <Clock size={14} />
+                  {featured.durationMinutes} min
+                </span>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '40px' }}>
+              {featured && (
+                <Link to={`/movies/${featured._id}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'var(--gradient-blue)', color: 'white', padding: '12px 24px', borderRadius: '12px', fontWeight: 600, fontSize: '0.95rem' }} className="glow-blue hover:brightness-110 transition">
+                  <Ticket size={18} />
+                  Book Tickets
+                </Link>
+              )}
+              <Link to="/cinemas" className="glass" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '12px 24px', borderRadius: '12px', fontWeight: 600, fontSize: '0.95rem' }}>
+                <Play size={16} />
+                All Cinemas
+              </Link>
+            </div>
           </motion.div>
-        )}
+
+          {/* Poster side */}
+          {featured && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+              style={{ position: 'relative', width: '100%', maxWidth: '380px', margin: '0 auto' }}
+            >
+              <div className="glass-strong" style={{ borderRadius: '24px', padding: '8px', boxShadow: 'var(--shadow-card)' }}>
+                <img 
+                  src={featured.posterUrl} 
+                  alt={featured.title} 
+                  style={{ width: '100%', height: 'auto', aspectRatio: '2/3', objectFit: 'cover', borderRadius: '16px', display: 'block' }}
+                />
+              </div>
+              <div className="glow-blue" style={{ position: 'absolute', inset: 0, zIndex: -1, borderRadius: '24px', opacity: 0.5 }} aria-hidden="true" />
+            </motion.div>
+          )}
+        </div>
       </section>
 
       {/* ── Discovery bar ─────────────────────────────────── */}

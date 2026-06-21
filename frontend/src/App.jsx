@@ -10,6 +10,7 @@ import MovieDetails from './pages/MovieDetails.jsx';
 import MyBookings from './pages/MyBookings.jsx';
 import Checkout from './pages/Checkout.jsx';
 import Offers from './pages/Offers.jsx';
+import Profile from './pages/Profile.jsx';
 import Register from './pages/Register.jsx';
 import { api, clearSession, getSession, saveSession } from './api.js';
 
@@ -85,6 +86,14 @@ export default function App() {
               <Route path="/movies/:id" element={<MovieDetails user={auth.user} />} />
               <Route path="/login" element={<Login onLogin={auth.login} />} />
               <Route path="/register" element={<Register onLogin={auth.login} />} />
+              <Route
+                path="/profile"
+                element={
+                  <RequireAuth user={auth.user}>
+                    <Profile session={session} setSession={setSession} />
+                  </RequireAuth>
+                }
+              />
               <Route
                 path="/bookings"
                 element={

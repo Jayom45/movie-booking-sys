@@ -1,8 +1,53 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Clapperboard, Loader2, LogOut, MapPin, Search, Ticket, UserPlus, X } from 'lucide-react';
+import { Clapperboard, Loader2, LogOut, MapPin, Search, Ticket, UserPlus, X, User } from 'lucide-react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
+
+function UserDropdown({ user, onLogout }) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const avatarLetters = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
+  return (
+    <div style={{ position: 'relative' }} ref={wrapRef}>
+      <button 
+        onClick={() => setOpen(!open)}
+        style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '4px 12px 4px 4px', borderRadius: '999px', cursor: 'pointer', color: 'white' }}
+        className="glass"
+      >
+        <div className="glow-blue" style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--gradient-blue)', display: 'grid', placeItems: 'center', fontSize: '0.7rem', fontWeight: 'bold' }}>
+          {avatarLetters}
+        </div>
+        <span style={{ fontSize: '0.85rem', fontWeight: '600' }}>{user.name.split(' ')[0]}</span>
+      </button>
+
+      {open && (
+        <div className="glass-strong" style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, minWidth: '180px', borderRadius: '16px', padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px', zIndex: 100, boxShadow: 'var(--shadow-card)' }}>
+          <Link to="/profile" onClick={() => setOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderRadius: '8px', fontSize: '0.85rem', color: 'var(--foreground)', textDecoration: 'none' }}>
+            <User size={14} /> Profile
+          </Link>
+          <Link to="/bookings" onClick={() => setOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderRadius: '8px', fontSize: '0.85rem', color: 'var(--foreground)', textDecoration: 'none' }}>
+            <Ticket size={14} /> My Bookings
+          </Link>
+          <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
+          <button onClick={() => { setOpen(false); onLogout(); }} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderRadius: '8px', fontSize: '0.85rem', color: 'var(--red)', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%' }}>
+            <LogOut size={14} /> Logout
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function NavSearch() {
   const [query, setQuery] = useState('');
@@ -188,12 +233,7 @@ export default function Nav({ user, onLogout, cities, selectedCity, onCityChange
         )}
 
         {user ? (
-          <>
-            <span className="user-pill">{user.name}</span>
-            <button className="icon-button" onClick={onLogout} title="Logout">
-              <LogOut size={18} />
-            </button>
-          </>
+          <UserDropdown user={user} onLogout={onLogout} />
         ) : (
           <>
             <Link className="button ghost" to="/login">

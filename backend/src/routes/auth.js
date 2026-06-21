@@ -14,7 +14,9 @@ function publicUser(user) {
     id: user._id,
     name: user.name,
     email: user.email,
-    role: user.role
+    role: user.role,
+    city: user.city || '',
+    createdAt: user.createdAt
   };
 }
 
@@ -55,6 +57,22 @@ router.post('/login', async (req, res) => {
 
 router.get('/me', protect, (req, res) => {
   res.json({ user: publicUser(req.user) });
+});
+
+router.put('/me', protect, async (req, res) => {
+  try {
+    const { name, city } = req.body;
+    const user = await User.findById(req.user._id);
+    
+    if (name) user.name = name;
+    if (city !== undefined) user.city = city;
+    
+    await user.save();
+    
+    res.json({ user: publicUser(user), token: signToken(user) });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 export default router;

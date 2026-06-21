@@ -1642,6 +1642,166 @@ h3 {
   font-weight: 900;
 }
 
+/* ── Premium Offers Page Redesign ── */
+.offers-page-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.premium-offers-hero {
+  position: relative;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  padding: 40px 0;
+}
+
+.premium-offers-hero-bg {
+  position: absolute;
+  top: -50%;
+  left: 0;
+  right: 0;
+  height: 200%;
+  background: radial-gradient(circle at 25% 0%, rgba(243, 201, 105, 0.15), transparent 60%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.premium-offers-hero-title {
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -1px;
+}
+
+.premium-offers-hero-title .text-gradient {
+  background: linear-gradient(135deg, var(--gold), #ff8a3d);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.premium-offer-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+@media (max-width: 800px) {
+  .premium-offer-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.premium-offer-card {
+  position: relative;
+  overflow: hidden;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  transition: transform 250ms ease, box-shadow 250ms ease;
+  min-height: 260px;
+}
+
+.premium-offer-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.55);
+}
+
+.premium-offer-glow {
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.08), transparent 60%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.premium-offer-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.offer-type-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gold);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.premium-offer-title {
+  font-size: 1.6rem;
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+
+.premium-offer-desc {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.premium-coupon-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 12px 16px;
+  border-radius: 100px;
+  margin-top: auto;
+  margin-bottom: 16px;
+}
+
+.premium-coupon-code {
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: 2.5px;
+  color: white;
+}
+
+.premium-copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 8px 18px;
+  border-radius: 100px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.premium-copy-btn:hover {
+  background: rgba(56, 189, 248, 0.25);
+}
+
+.premium-copy-btn.copied {
+  background: rgba(74, 222, 128, 0.15);
+  color: #4ade80;
+  border-color: rgba(74, 222, 128, 0.3);
+}
+
+.premium-offer-meta {
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
 .movie-detail-page {
   display: grid;
   gap: 22px;

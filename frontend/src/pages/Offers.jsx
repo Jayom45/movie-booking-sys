@@ -1,38 +1,97 @@
 import { motion } from 'framer-motion';
-import { BadgePercent, CreditCard, Gift, Popcorn, Sparkles, TicketPercent } from 'lucide-react';
+import { Copy, Check, Sparkles } from 'lucide-react';
+import { useState } from 'react';
 
 const offers = [
-  { icon: TicketPercent, title: 'Weekend Premiere', code: 'WEEKEND25', copy: '25% off on premium morning shows and selected screens.' },
-  { icon: CreditCard, title: 'Platinum Card Deal', code: 'CARD150', copy: 'Flat Rs 150 off on selected debit and credit cards.' },
-  { icon: Popcorn, title: 'Snack Upgrade', code: 'POPCORN99', copy: 'Add popcorn and beverage combo at Rs 99 with any booking.' },
-  { icon: Gift, title: 'First Night Out', code: 'HELLOCINE', copy: 'New users get a special discount on their first two tickets.' }
+  { 
+    title: 'Flat 50% off on first booking', 
+    code: 'HELLOCINE', 
+    copy: 'Get up to ₹150 off on your first ticket purchase via UPI.', 
+    savings: 'Save 50%', 
+    expiry: 'Valid till 31 Aug' 
+  },
+  { 
+    title: 'Flat ₹150 off on cards', 
+    code: 'CARD150', 
+    copy: 'Premium formats deserve a premium discount. Valid weekdays.', 
+    savings: 'Save ₹150', 
+    expiry: 'Valid till 15 Sep' 
+  },
+  { 
+    title: '25% off weekend shows', 
+    code: 'WEEKEND25', 
+    copy: 'Friday to Sunday on any 2D show. Min 2 tickets.', 
+    savings: 'Save 25%', 
+    expiry: 'Valid till 30 Sep' 
+  },
+  { 
+    title: 'Snack Upgrade at ₹99', 
+    code: 'POPCORN99', 
+    copy: 'Add popcorn and beverage combo at Rs 99 with any booking.', 
+    savings: 'Save ₹200', 
+    expiry: 'Valid till 31 Oct' 
+  }
 ];
+
+function OfferCard({ offer, index }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(offer.code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <motion.article 
+      className="premium-offer-card glass-panel" 
+      initial={{ opacity: 0, y: 18 }} 
+      animate={{ opacity: 1, y: 0 }} 
+      transition={{ delay: index * 0.06 }}
+    >
+      <div className="premium-offer-glow" />
+      <div className="premium-offer-content">
+        <div className="offer-type-label">
+          <Sparkles size={12} />
+          PROMO CODE
+        </div>
+        
+        <h2 className="premium-offer-title">{offer.title}</h2>
+        <p className="premium-offer-desc">{offer.copy}</p>
+        
+        <div className="premium-coupon-row">
+          <code className="premium-coupon-code">{offer.code}</code>
+          <button className={`premium-copy-btn ${copied ? 'copied' : ''}`} onClick={handleCopy}>
+            {copied ? (
+              <><Check size={14} /> Copied</>
+            ) : (
+              <><Copy size={14} /> Copy</>
+            )}
+          </button>
+        </div>
+        
+        <div className="premium-offer-meta">
+          {offer.savings} &middot; {offer.expiry}
+        </div>
+      </div>
+    </motion.article>
+  );
+}
 
 export default function Offers() {
   return (
-    <section>
-      <div className="page-hero compact-hero">
-        <p className="eyebrow">Rewards</p>
-        <h1>Offers that make movie night feel bigger.</h1>
-        <p>Premium deals, card offers, snack upgrades, and launch rewards for CineBook members.</p>
+    <section className="offers-page-wrapper">
+      <div className="premium-offers-hero">
+        <div className="premium-offers-hero-bg"></div>
+        <h1 className="premium-offers-hero-title">
+          Offers built for <span className="text-gradient">movie nights.</span>
+        </h1>
       </div>
 
-      <div className="offer-grid">
-        {offers.map((offer, index) => {
-          const Icon = offer.icon;
-          return (
-            <motion.article className="offer-card" key={offer.code} initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.06 }}>
-              <div className="offer-icon"><Icon size={24} /></div>
-              <span className="premium-label"><Sparkles size={14} /> Limited</span>
-              <h2>{offer.title}</h2>
-              <p>{offer.copy}</p>
-              <div className="coupon-row">
-                <code>{offer.code}</code>
-                <BadgePercent size={18} />
-              </div>
-            </motion.article>
-          );
-        })}
+      <div className="premium-offer-grid">
+        {offers.map((offer, index) => (
+          <OfferCard key={offer.code} offer={offer} index={index} />
+        ))}
       </div>
     </section>
   );

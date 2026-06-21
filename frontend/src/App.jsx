@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import Nav from './components/Nav.jsx';
+import Footer from './components/Footer.jsx';
 import Admin from './pages/Admin.jsx';
 import Cinemas from './pages/Cinemas.jsx';
 import Home from './pages/Home.jsx';
@@ -122,6 +123,7 @@ export default function App() {
           </motion.div>
         </AnimatePresence>
       </main>
+      <Footer />
     </>
   );
 }

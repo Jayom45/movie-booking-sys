@@ -429,6 +429,22 @@ export default function MovieDetails({ user }) {
     return generated;
   }, [selectedShow]);
 
+  const seatRows = useMemo(() => {
+    const grouped = {};
+    dynamicSeats.forEach(seat => {
+      const row = seat.replace(/[0-9]/g, '');
+      if (!grouped[row]) grouped[row] = [];
+      grouped[row].push(seat);
+    });
+    return grouped;
+  }, [dynamicSeats]);
+
+  const getSeatTierClass = (row) => {
+    if (row === 'A' || row === 'B') return 'seat-premium';
+    if (row === 'C' || row === 'D') return 'seat-gold';
+    return 'seat-silver';
+  };
+
   useEffect(() => {
     if (visibleShows.length > 0 && !visibleShows.some((show) => show._id === selectedShowId)) {
       setSelectedShowId(visibleShows[0]._id);
@@ -531,46 +547,96 @@ export default function MovieDetails({ user }) {
           </div>
         </div>
 
-        <div className="glass-panel seat-panel">
+        <div className="seat-selection-container">
           {selectedShow ? (
-            <>
-              <div className="screen">SCREEN {selectedShow.screen}</div>
-              <div className="legend-row">
-                <span><i className="legend-dot seat-premium" /> Premium (Rs {selectedShow.prices?.premium || 350})</span>
-                <span><i className="legend-dot seat-gold" /> Gold (Rs {selectedShow.prices?.gold || 250})</span>
-                <span><i className="legend-dot seat-silver" /> Silver (Rs {selectedShow.prices?.silver || 180})</span>
-                <span><i className="legend-dot booked" /> Booked</span>
-              </div>
-              <div className="seat-grid">
-                {dynamicSeats.map((seat) => {
-                  const booked = selectedShow.bookedSeats.includes(seat);
-                  const selected = selectedSeats.includes(seat);
-                  const row = seat.replace(/[0-9]/g, '');
-                  let tierClass = 'seat-silver';
-                  if (row === 'A' || row === 'B') tierClass = 'seat-premium';
-                  else if (row === 'C' || row === 'D') tierClass = 'seat-gold';
-
-                  return (
-                    <button key={seat} className={`seat ${tierClass} ${booked ? 'booked' : ''} ${selected ? 'selected' : ''}`} onClick={() => toggleSeat(seat)} disabled={booked}>
-                      {seat}
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="checkout-bar">
-                <div>
-                  <span>{selectedSeats.length ? selectedSeats.join(', ') : 'Choose your seats'}</span>
-                  <strong><IndianRupee size={16} /> {total}</strong>
+            <div className="premium-seat-layout">
+              {/* LEFT COLUMN: Seat Map */}
+              <div className="glass-panel seat-map-section">
+                <div className="screen-container">
+                  <div className="screen-glow"></div>
+                  <div className="screen">SCREEN {selectedShow.screen}</div>
                 </div>
-                {user ? (
-                  <button className="button primary" onClick={proceedToCheckout} disabled={selectedSeats.length === 0}><Ticket size={17} /> Continue to Checkout</button>
-                ) : (
-                  <Link className="button primary" to="/login">Login to Book</Link>
-                )}
+                
+                <div className="seat-map-wrapper">
+                  {Object.keys(seatRows).map(row => (
+                    <div className="seat-row" key={row}>
+                      <span className="row-label">{row}</span>
+                      <div className="seat-row-seats">
+                        {seatRows[row].map(seat => {
+                          const booked = selectedShow.bookedSeats.includes(seat);
+                          const selected = selectedSeats.includes(seat);
+                          const tierClass = getSeatTierClass(row);
+                          const seatNumber = seat.replace(/[A-Z]/g, '');
+                          
+                          return (
+                            <button 
+                              key={seat} 
+                              className={`seat ${tierClass} ${booked ? 'booked' : ''} ${selected ? 'selected' : ''}`} 
+                              onClick={() => toggleSeat(seat)} 
+                              disabled={booked}
+                            >
+                              {seatNumber}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <span className="row-label right">{row}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="legend-row">
+                  <span><i className="legend-dot seat-premium" /> Premium (Rs {selectedShow.prices?.premium || 350})</span>
+                  <span><i className="legend-dot seat-gold" /> Gold (Rs {selectedShow.prices?.gold || 250})</span>
+                  <span><i className="legend-dot seat-silver" /> Silver (Rs {selectedShow.prices?.silver || 180})</span>
+                  <span><i className="legend-dot booked" /> Occupied</span>
+                </div>
               </div>
-            </>
+
+              {/* RIGHT COLUMN: Order Summary */}
+              <div className="glass-panel sticky-summary">
+                <div className="summary-header">
+                  <h3 className="summary-title">ORDER SUMMARY</h3>
+                  <h2>{selectedSeats.length} seats</h2>
+                  <p>{selectedSeats.length ? selectedSeats.join(', ') : 'Pick a seat from the chart to begin.'}</p>
+                </div>
+                
+                <div className="summary-details">
+                  <div className="summary-row">
+                    <span>Subtotal</span>
+                    <span>₹{total}</span>
+                  </div>
+                  <div className="summary-row">
+                    <span>Convenience fee</span>
+                    <span>₹0</span>
+                  </div>
+                  <div className="summary-divider" />
+                  <div className="summary-row total-row">
+                    <span>Total</span>
+                    <span className="total-amount">₹{total}</span>
+                  </div>
+                </div>
+
+                <div className="summary-actions">
+                  {user ? (
+                    <button className="button primary full-width" onClick={proceedToCheckout} disabled={selectedSeats.length === 0}>
+                      Proceed to payment
+                    </button>
+                  ) : (
+                    <Link className="button primary full-width text-center" style={{ display: 'block' }} to="/login">
+                      Login to Book
+                    </Link>
+                  )}
+                  <p className="payment-methods">UPI · Cards · Net Banking · Wallets</p>
+                </div>
+              </div>
+            </div>
           ) : (
-            <div className="empty-state"><CalendarClock size={34} /><h2>No shows match these filters</h2><p>Try another city or date.</p></div>
+            <div className="glass-panel empty-state">
+              <CalendarClock size={34} />
+              <h2>No shows match these filters</h2>
+              <p>Try another city or date.</p>
+            </div>
           )}
         </div>
       </section>

@@ -2054,39 +2054,56 @@ h3 {
   margin-bottom: 80px;
 }
 
+.screen-container {
+  position: relative;
+  margin: 0 auto 60px;
+  max-width: 600px;
+}
+
+.screen-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(180deg, rgba(110, 231, 249, 0.15), transparent);
+  filter: blur(20px);
+  border-radius: 100%;
+}
+
 .screen {
   position: relative;
-  margin: 0 auto 24px;
-  max-width: 700px;
   width: 100%;
   padding: 12px;
   color: #dfe8ff;
   text-align: center;
-  background: linear-gradient(90deg, transparent, rgba(110, 231, 249, 0.24), transparent);
-  border-top: 1px solid rgba(110, 231, 249, 0.36);
-  border-radius: 18px;
+  border-top: 2px solid rgba(110, 231, 249, 0.4);
+  border-radius: 50% 50% 0 0 / 20px 20px 0 0;
   font-weight: 900;
+  letter-spacing: 4px;
+  font-size: 0.85rem;
 }
 
 .legend-row {
   display: flex;
   justify-content: center;
-  gap: 16px;
+  gap: 24px;
   flex-wrap: wrap;
-  margin-bottom: 24px;
+  margin-top: 32px;
   color: var(--muted);
-  font-weight: 800;
+  font-weight: 700;
+  font-size: 0.85rem;
 }
 
 .legend-dot {
   display: inline-block;
-  width: 13px;
-  height: 13px;
-  margin-right: 6px;
+  width: 12px;
+  height: 12px;
+  margin-right: 8px;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: 4px;
-  vertical-align: -2px;
+  border-radius: 50%;
+  vertical-align: -1px;
 }
 
 .legend-dot.selected {
@@ -2099,24 +2116,50 @@ h3 {
   border-color: #49505e;
 }
 
-.seat-grid {
-  display: grid;
-  grid-template-columns: repeat(10, minmax(36px, 1fr));
+.seat-map-wrapper {
+  display: flex;
+  flex-direction: column;
   gap: 12px;
-  max-width: 700px;
-  margin: 0 auto;
-  width: 100%;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.seat-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.row-label {
+  width: 24px;
+  text-align: center;
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.row-label.right {
+  text-align: left;
+}
+
+.seat-row-seats {
+  display: flex;
+  gap: 10px;
 }
 
 .seat {
-  height: 38px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: #dbe2ee;
-  background: rgba(255, 255, 255, 0.075);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 10px 10px 5px 5px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
   cursor: pointer;
-  font-size: 0.82rem;
-  font-weight: 900;
+  font-size: 0.75rem;
+  font-weight: 800;
   transition: transform 120ms ease, background 120ms ease;
 }
 
@@ -2154,34 +2197,94 @@ h3 {
 .legend-dot.seat-gold { background: var(--gold); border-color: var(--gold); }
 .legend-dot.seat-silver { background: #38bdf8; border-color: #38bdf8; }
 
-.checkout-bar {
+/* Premium Seat Layout Summary */
+.premium-seat-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 32px;
+  align-items: start;
+}
+
+@media (max-width: 980px) {
+  .premium-seat-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.seat-map-section {
+  padding: 40px;
+}
+
+.sticky-summary {
+  position: sticky;
+  top: 100px;
+  padding: 32px;
+}
+
+.summary-header {
+  margin-bottom: 32px;
+}
+
+.summary-title {
+  font-size: 0.85rem;
+  letter-spacing: 2px;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  font-weight: 900;
+}
+
+.summary-header h2 {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.summary-header p {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.summary-details {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.summary-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
-  margin: 22px auto 0;
-  max-width: 700px;
-  width: 100%;
-  padding: 16px;
-  background: rgba(0, 0, 0, 0.26);
-  border: 1px solid var(--line);
-  border-radius: 20px;
+  color: #e9edf5;
 }
 
-.checkout-bar div {
-  display: grid;
-  gap: 5px;
-}
-
-.checkout-bar span {
+.summary-row span:first-child {
   color: var(--muted);
 }
 
-.checkout-bar strong {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 1.5rem;
+.summary-divider {
+  height: 1px;
+  background: var(--line);
+  margin: 4px 0;
+}
+
+.summary-row.total-row {
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+
+.total-amount {
+  color: var(--gold) !important;
+}
+
+.summary-actions {
+  display: grid;
+  gap: 16px;
+}
+
+.payment-methods {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--muted);
 }
 
 .auth-screen {

@@ -82,7 +82,7 @@ export default function App() {
         <AnimatePresence mode="wait">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
             <Routes>
-              <Route path="/" element={<Landing />} />
+              <Route path="/" element={<Landing user={auth.user} />} />
               <Route path="/movies" element={<Home selectedCity={selectedCity} />} />
               <Route path="/cinemas" element={<Cinemas selectedCity={selectedCity} />} />
               <Route path="/offers" element={<Offers />} />

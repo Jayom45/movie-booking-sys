@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 
-export default function Landing() {
+export default function Landing({ user }) {
   const [trendingMovies, setTrendingMovies] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
@@ -35,8 +35,11 @@ export default function Landing() {
             animate={{ opacity: 1, y: 0 }}
             className="landing-hero-title"
           >
-            The premium way to book <br />
-            <span className="text-gradient-gold">movie tickets.</span>
+            {user ? (
+              <>Welcome back, <br /><span className="text-gradient-gold">{user.name}</span></>
+            ) : (
+              <>The premium way to book <br /><span className="text-gradient-gold">movie tickets.</span></>
+            )}
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
@@ -44,7 +47,7 @@ export default function Landing() {
             transition={{ delay: 0.1 }}
             className="landing-hero-subtitle"
           >
-            Discover the latest blockbusters, select your favorite seats, and experience cinema like never before.
+            {user ? "Ready for your next cinematic experience? Book your tickets now." : "Discover the latest blockbusters, select your favorite seats, and experience cinema like never before."}
           </motion.p>
           
           <motion.form 
@@ -73,9 +76,15 @@ export default function Landing() {
             <Link to="/movies" className="button primary" style={{ padding: '14px 28px', fontSize: '1.1rem' }}>
               <Play size={18} /> Browse Movies
             </Link>
-            <Link to="/cinemas" className="button glass" style={{ padding: '14px 28px', fontSize: '1.1rem' }}>
-              <MapPin size={18} /> View Cinemas
-            </Link>
+            {user ? (
+              <Link to="/profile" className="button glass" style={{ padding: '14px 28px', fontSize: '1.1rem' }}>
+                <Ticket size={18} /> View My Bookings
+              </Link>
+            ) : (
+              <Link to="/cinemas" className="button glass" style={{ padding: '14px 28px', fontSize: '1.1rem' }}>
+                <MapPin size={18} /> View Cinemas
+              </Link>
+            )}
           </motion.div>
         </div>
 
@@ -193,11 +202,22 @@ export default function Landing() {
           className="app-cta-card glass-panel"
         >
           <div className="app-cta-content">
-            <h2>Your next movie night is one click away.</h2>
-            <p>Join thousands of cinema lovers booking tickets seamlessly.</p>
-            <Link to="/register" className="button primary" style={{ marginTop: '20px', padding: '14px 32px', fontSize: '1.1rem' }}>
-              Create Free Account
-            </Link>
+            <h2>{user ? "Ready to watch another movie?" : "Your next movie night is one click away."}</h2>
+            <p>{user ? "Check out our latest offers and book your tickets securely." : "Join thousands of cinema lovers booking tickets seamlessly."}</p>
+            {user ? (
+              <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginTop: '20px' }}>
+                <Link to="/movies" className="button primary" style={{ padding: '14px 32px', fontSize: '1.1rem' }}>
+                  Book Tickets Now
+                </Link>
+                <Link to="/offers" className="button glass" style={{ padding: '14px 32px', fontSize: '1.1rem' }}>
+                  Explore Offers
+                </Link>
+              </div>
+            ) : (
+              <Link to="/register" className="button primary" style={{ marginTop: '20px', padding: '14px 32px', fontSize: '1.1rem' }}>
+                Create Free Account
+              </Link>
+            )}
           </div>
         </motion.div>
       </section>

@@ -141,7 +141,19 @@ export async function generatePdfBlob(booking) {
     scale: 2, 
     useCORS: true, 
     backgroundColor: '#ffffff',
-    logging: false
+    logging: false,
+    onclone: (clonedDoc) => {
+      // html2canvas crashes when parsing oklch() colors in global stylesheets.
+      // Replace them with a safe fallback only in the cloned document for PDF rendering.
+      const styles = clonedDoc.querySelectorAll('style, link[rel="stylesheet"]');
+      styles.forEach(s => {
+        if (s.tagName.toLowerCase() === 'style') {
+          s.innerHTML = s.innerHTML.replace(/oklch\([^)]+\)/g, '#000000');
+        } else if (s.href && !s.href.includes('fonts')) {
+          s.remove(); // Remove production CSS links to avoid parsing errors
+        }
+      });
+    }
   });
 
   // 5. Cleanup DOM

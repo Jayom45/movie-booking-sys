@@ -17,7 +17,7 @@ export default function Profile({ session, setSession }) {
   useEffect(() => {
     async function loadBookings() {
       try {
-        const data = await api('/bookings');
+        const data = await api('/bookings/mine');
         setBookings(data);
       } catch (err) {
         console.error('Failed to load bookings', err);

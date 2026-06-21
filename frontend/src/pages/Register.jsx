@@ -1,18 +1,35 @@
 import { motion } from 'framer-motion';
 import { Lock, Mail, User, UserPlus } from 'lucide-react';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../api.js';
 
 export default function Register({ onLogin }) {
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [searchParams] = useSearchParams();
+  const inviteEmail = searchParams.get('email') || '';
+  const squadInvite = searchParams.get('squad_invite') || '';
+  
+  const [form, setForm] = useState({ name: '', email: inviteEmail, password: '' });
   const [error, setError] = useState('');
 
   async function submit(event) {
     event.preventDefault();
     try {
       setError('');
-      onLogin(await api('/auth/register', { method: 'POST', body: JSON.stringify(form) }));
+      const userData = await api('/auth/register', { method: 'POST', body: JSON.stringify(form) });
+      
+      // Store token immediately so subsequent api calls work
+      localStorage.setItem('auth', JSON.stringify(userData));
+      
+      if (squadInvite) {
+        try {
+          await api(`/squads/${squadInvite}/respond`, { method: 'POST', body: JSON.stringify({ status: 'accepted' }) });
+        } catch (e) {
+          console.error("Failed to auto-accept squad invite", e);
+        }
+      }
+      
+      onLogin(userData);
     } catch (err) {
       setError(err.message);
     }

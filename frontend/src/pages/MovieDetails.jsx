@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { CalendarClock, IndianRupee, MapPin, MessageSquare, Pencil, Play, ShieldCheck, Sofa, Star, Ticket, Trash2, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../api.js';
 import { getValidGenres } from '../utils.js';
 
@@ -371,6 +371,8 @@ function ReviewSection({ movieId, movie, user, onMovieRatingUpdate }) {
 export default function MovieDetails({ user }) {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const preselectedShowId = searchParams.get('showId');
   const [movie, setMovie] = useState(null);
   const [shows, setShows] = useState([]);
   const [selectedShowId, setSelectedShowId] = useState('');
@@ -385,8 +387,20 @@ export default function MovieDetails({ user }) {
     const data = await api(`/movies/${id}`);
     setMovie(data.movie);
     setShows(data.shows);
-    setSelectedShowId((current) => current || data.shows[0]?._id || '');
-    setSelectedDate((current) => current || (data.shows[0] ? dateKey(data.shows[0].showTime) : ''));
+    
+    let defaultShowId = data.shows[0]?._id || '';
+    let defaultDate = data.shows[0] ? dateKey(data.shows[0].showTime) : '';
+    
+    if (preselectedShowId) {
+      const preselectedShow = data.shows.find(s => s._id === preselectedShowId);
+      if (preselectedShow) {
+        defaultShowId = preselectedShow._id;
+        defaultDate = dateKey(preselectedShow.showTime);
+      }
+    }
+
+    setSelectedShowId((current) => current || defaultShowId);
+    setSelectedDate((current) => current || defaultDate);
   }
 
   useEffect(() => {

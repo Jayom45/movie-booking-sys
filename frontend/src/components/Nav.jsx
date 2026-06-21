@@ -39,6 +39,9 @@ function UserDropdown({ user, onLogout }) {
           <Link to="/bookings" onClick={() => setOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderRadius: '8px', fontSize: '0.85rem', color: 'var(--foreground)', textDecoration: 'none' }}>
             <Ticket size={14} /> My Bookings
           </Link>
+          <Link to="/squads" onClick={() => setOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderRadius: '8px', fontSize: '0.85rem', color: 'var(--foreground)', textDecoration: 'none' }}>
+            <Clapperboard size={14} /> My Squads
+          </Link>
           <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
           <button onClick={() => { setOpen(false); onLogout(); }} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderRadius: '8px', fontSize: '0.85rem', color: 'var(--red)', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%' }}>
             <LogOut size={14} /> Logout
@@ -207,6 +210,10 @@ export default function Nav({ user, onLogout, cities, selectedCity, onCityChange
         <NavLink to="/movies">Movies</NavLink>
         <NavLink to="/cinemas">Cinemas</NavLink>
         <NavLink to="/offers">Offers</NavLink>
+        <NavLink to="/squads" style={{ display: 'flex', alignItems: 'center' }}>
+          CineSquad
+          <span style={{ fontSize: '0.65rem', background: 'var(--gradient-gold)', color: '#000', padding: '2px 6px', borderRadius: '8px', marginLeft: '6px', fontWeight: 'bold' }}>NEW</span>
+        </NavLink>
         {user && <NavLink to="/bookings">My Bookings</NavLink>}
         {user?.role === 'admin' && <NavLink to="/admin">Admin</NavLink>}
       </nav>

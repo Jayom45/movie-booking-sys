@@ -14,6 +14,10 @@ import Checkout from './pages/Checkout.jsx';
 import Offers from './pages/Offers.jsx';
 import Profile from './pages/Profile.jsx';
 import Register from './pages/Register.jsx';
+import SquadLanding from './pages/Squads/Landing.jsx';
+import SquadCreate from './pages/Squads/Create.jsx';
+import SquadDashboard from './pages/Squads/Dashboard.jsx';
+import SquadList from './pages/Squads/SquadList.jsx';
 import { api, clearSession, getSession, saveSession } from './api.js';
 
 function RequireAuth({ user, children }) {
@@ -101,7 +105,32 @@ export default function App() {
                 path="/bookings"
                 element={
                   <RequireAuth user={auth.user}>
-                    <MyBookings />
+                    <MyBookings user={auth.user} />
+                  </RequireAuth>
+                }
+              />
+              <Route path="/squads" element={<SquadLanding user={auth.user} />} />
+              <Route
+                path="/squads/create"
+                element={
+                  <RequireAuth user={auth.user}>
+                    <SquadCreate cities={cities} />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/squads/dashboard"
+                element={
+                  <RequireAuth user={auth.user}>
+                    <SquadList />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/squads/:id"
+                element={
+                  <RequireAuth user={auth.user}>
+                    <SquadDashboard user={auth.user} />
                   </RequireAuth>
                 }
               />

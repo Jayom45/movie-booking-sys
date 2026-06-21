@@ -53,7 +53,15 @@ router.get('/:id', async (req, res) => {
 
 // ─── POST /api/shows  (admin) ─────────────────────────────────────────────────
 router.post('/', protect, adminOnly, async (req, res) => {
-  const show = await Show.create(req.body);
+  const { movie, theater, city, screen, showTime, pricePremium, priceGold, priceSilver, totalSeats } = req.body;
+  const show = await Show.create({
+    movie, theater, city, screen, showTime, totalSeats,
+    prices: {
+      premium: pricePremium || 350,
+      gold: priceGold || 250,
+      silver: priceSilver || 180
+    }
+  });
   await show.populate('movie');
   res.status(201).json(show);
 });
@@ -61,10 +69,17 @@ router.post('/', protect, adminOnly, async (req, res) => {
 // ─── PUT /api/shows/:id  (admin — edit show) ──────────────────────────────────
 router.put('/:id', protect, adminOnly, async (req, res) => {
   try {
-    const { theater, city, screen, showTime, price, totalSeats } = req.body;
+    const { theater, city, screen, showTime, pricePremium, priceGold, priceSilver, totalSeats } = req.body;
     const show = await Show.findByIdAndUpdate(
       req.params.id,
-      { theater, city, screen, showTime, price, totalSeats },
+      { 
+        theater, city, screen, showTime, totalSeats,
+        prices: {
+          premium: pricePremium || 350,
+          gold: priceGold || 250,
+          silver: priceSilver || 180
+        }
+      },
       { new: true, runValidators: true }
     ).populate('movie', 'title');
 

@@ -400,7 +400,16 @@ export default function MovieDetails({ user }) {
     [selectedCity, selectedDate, shows]
   );
   const selectedShow = useMemo(() => shows.find((show) => show._id === selectedShowId), [shows, selectedShowId]);
-  const total = selectedSeats.length * (selectedShow?.price || 0);
+
+  const total = useMemo(() => {
+    if (!selectedShow) return 0;
+    return selectedSeats.reduce((sum, seat) => {
+      const row = seat.replace(/[0-9]/g, '');
+      if (row === 'A' || row === 'B') return sum + (selectedShow.prices?.premium || 350);
+      if (row === 'C' || row === 'D') return sum + (selectedShow.prices?.gold || 250);
+      return sum + (selectedShow.prices?.silver || 180);
+    }, 0);
+  }, [selectedSeats, selectedShow]);
 
   const dynamicSeats = useMemo(() => {
     if (!selectedShow) return [];
@@ -512,7 +521,7 @@ export default function MovieDetails({ user }) {
               <button className={show._id === selectedShowId ? 'show-option active' : 'show-option'} key={show._id} onClick={() => { setSelectedShowId(show._id); setSelectedSeats([]); }}>
                 <CalendarClock size={18} />
                 <span>{show.theater}, {show.city}<small>{formatTime(show.showTime)} | {show.screen} | {show.totalSeats - show.bookedSeats.length} seats left</small></span>
-                <strong>Rs {show.price}</strong>
+                <strong>Rs {show.prices?.silver || 180} - {show.prices?.premium || 350}</strong>
               </button>
             ))}
           </div>
@@ -523,16 +532,22 @@ export default function MovieDetails({ user }) {
             <>
               <div className="screen">IMAX SCREEN</div>
               <div className="legend-row">
-                <span><i className="legend-dot available" /> Available</span>
-                <span><i className="legend-dot selected" /> Selected</span>
+                <span><i className="legend-dot seat-premium" /> Premium (Rs {selectedShow.prices?.premium || 350})</span>
+                <span><i className="legend-dot seat-gold" /> Gold (Rs {selectedShow.prices?.gold || 250})</span>
+                <span><i className="legend-dot seat-silver" /> Silver (Rs {selectedShow.prices?.silver || 180})</span>
                 <span><i className="legend-dot booked" /> Booked</span>
               </div>
               <div className="seat-grid">
                 {dynamicSeats.map((seat) => {
                   const booked = selectedShow.bookedSeats.includes(seat);
                   const selected = selectedSeats.includes(seat);
+                  const row = seat.replace(/[0-9]/g, '');
+                  let tierClass = 'seat-silver';
+                  if (row === 'A' || row === 'B') tierClass = 'seat-premium';
+                  else if (row === 'C' || row === 'D') tierClass = 'seat-gold';
+
                   return (
-                    <button key={seat} className={`seat ${booked ? 'booked' : ''} ${selected ? 'selected' : ''}`} onClick={() => toggleSeat(seat)} disabled={booked}>
+                    <button key={seat} className={`seat ${tierClass} ${booked ? 'booked' : ''} ${selected ? 'selected' : ''}`} onClick={() => toggleSeat(seat)} disabled={booked}>
                       {seat}
                     </button>
                   );

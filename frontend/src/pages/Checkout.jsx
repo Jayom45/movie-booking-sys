@@ -32,6 +32,16 @@ export default function Checkout() {
   if (!state || !state.show || !state.seats) return null;
 
   const { movie, show, seats, baseTotal, convenienceFee } = state;
+
+  const categoryCounts = seats.reduce((acc, seat) => {
+    const row = seat.replace(/[0-9]/g, '');
+    let cat = 'Silver';
+    if (row === 'A' || row === 'B') cat = 'Premium';
+    else if (row === 'C' || row === 'D') cat = 'Gold';
+    acc[cat] = (acc[cat] || 0) + 1;
+    return acc;
+  }, {});
+  const categoryText = Object.entries(categoryCounts).map(([cat, count]) => `${count}x ${cat}`).join(', ');
   const grandTotal = baseTotal + convenienceFee;
 
   const handlePayment = async () => {
@@ -126,7 +136,7 @@ export default function Checkout() {
 
           <div className="summary-pricing">
             <div className="price-row">
-              <span>Tickets ({seats.length} × Rs {show.price})</span>
+              <span>Tickets ({categoryText})</span>
               <span>Rs {baseTotal}</span>
             </div>
             <div className="price-row">

@@ -304,7 +304,9 @@ const showEditFields = [
   { key: 'city', label: 'City', type: 'text' },
   { key: 'screen', label: 'Screen', type: 'text' },
   { key: 'showTime', label: 'Show Time', type: 'datetime-local' },
-  { key: 'price', label: 'Price (Rs)', type: 'number' },
+  { key: 'pricePremium', label: 'Premium Price (Rs)', type: 'number' },
+  { key: 'priceGold', label: 'Gold Price (Rs)', type: 'number' },
+  { key: 'priceSilver', label: 'Silver Price (Rs)', type: 'number' },
   { key: 'totalSeats', label: 'Total Seats', type: 'number' }
 ];
 
@@ -314,7 +316,9 @@ function ShowEditModal({ show, onSave, onClose }) {
     city: show.city,
     screen: show.screen,
     showTime: toDatetimeLocal(show.showTime),
-    price: show.price,
+    pricePremium: show.prices?.premium || 350,
+    priceGold: show.prices?.gold || 250,
+    priceSilver: show.prices?.silver || 180,
     totalSeats: show.totalSeats
   });
   const [saving, setSaving] = useState(false);
@@ -593,7 +597,7 @@ function ShowManagement({ shows, setShows, loading }) {
                 <th>City</th>
                 <th>Screen</th>
                 <th>Show Time</th>
-                <th>Price</th>
+                <th>Prices (P/G/S)</th>
                 <th>Total</th>
                 <th>Available</th>
                 <th>Actions</th>
@@ -609,7 +613,7 @@ function ShowManagement({ shows, setShows, loading }) {
                     <td><span className="mgmt-badge">{show.city}</span></td>
                     <td>{show.screen}</td>
                     <td>{fmtDateTime(show.showTime)}</td>
-                    <td>Rs {show.price}</td>
+                    <td>Rs {show.prices?.premium}/{show.prices?.gold}/{show.prices?.silver}</td>
                     <td>{show.totalSeats}</td>
                     <td>
                       <span className={`mgmt-seats ${available === 0 ? 'seats-full' : ''}`}>
@@ -751,14 +755,16 @@ function AddMovieForm({ movies, setMovies }) {
 }
 
 // ─── Add Show form ────────────────────────────────────────────────────────────
-const emptyShow = { movie: '', theater: '', city: '', screen: '', showTime: '', price: 250, totalSeats: 40 };
+const emptyShow = { movie: '', theater: '', city: '', screen: '', showTime: '', pricePremium: 350, priceGold: 250, priceSilver: 180, totalSeats: 40 };
 
 const showLabelMap = {
   theater: 'Theatre',
   city: 'City',
   screen: 'Screen',
   showTime: 'Show Time',
-  price: 'Price (Rs)',
+  pricePremium: 'Premium Price (Rs)',
+  priceGold: 'Gold Price (Rs)',
+  priceSilver: 'Silver Price (Rs)',
   totalSeats: 'Total Seats'
 };
 
@@ -800,7 +806,7 @@ function AddShowForm({ movies, shows, setShows }) {
         <label key={key}>
           {showLabelMap[key] || key}
           <input
-            type={key === 'showTime' ? 'datetime-local' : ['price', 'totalSeats'].includes(key) ? 'number' : 'text'}
+            type={key === 'showTime' ? 'datetime-local' : key.includes('price') || key === 'totalSeats' ? 'number' : 'text'}
             value={form[key]}
             onChange={(e) => setForm({ ...form, [key]: e.target.value })}
             required

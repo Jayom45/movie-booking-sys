@@ -64,7 +64,9 @@ function TicketTemplate({ booking, qrDataUrl, onReady }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
               <div>
                 <p style={{ margin: 0, fontSize: '11px', color: '#9ca3af', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.5px' }}>Seats ({booking.seats.length} Tickets)</p>
-                <p style={{ margin: '6px 0 0 0', fontSize: '16px', fontWeight: '800', color: '#111827' }}>{booking.seats.join(', ')}</p>
+                <p style={{ margin: '6px 0 0 0', fontSize: '16px', fontWeight: '800', color: '#111827' }}>
+                  {booking.seatDetails?.length > 0 ? booking.seatDetails.map(s => `${s.number} (${s.category})`).join(', ') : booking.seats.join(', ')}
+                </p>
               </div>
               <div>
                 <p style={{ margin: 0, fontSize: '11px', color: '#9ca3af', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.5px' }}>Screen</p>

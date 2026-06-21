@@ -56,11 +56,30 @@ router.post('/', protect, async (req, res) => {
       return res.status(409).json({ message: `Seats already booked: ${duplicateSeats.join(', ')}` });
     }
 
+    const seatDetails = seats.map(seat => {
+      const row = seat.replace(/[0-9]/g, '');
+      let category = 'Silver';
+      let price = show.prices?.silver || 180;
+
+      if (row === 'A' || row === 'B') {
+        category = 'Premium';
+        price = show.prices?.premium || 350;
+      } else if (row === 'C' || row === 'D') {
+        category = 'Gold';
+        price = show.prices?.gold || 250;
+      }
+
+      return { number: seat, category, price };
+    });
+
+    const totalAmount = seatDetails.reduce((sum, s) => sum + s.price, 0);
+
     const booking = await Booking.create({
       user: req.user._id,
       show: show._id,
       seats,
-      totalAmount: seats.length * show.price,
+      seatDetails,
+      totalAmount,
       bookingRef: generateBookingRef()
     });
 
@@ -151,7 +170,7 @@ Movie: ${booking.show.movie.title}
 Theatre: ${booking.show.theater}, ${booking.show.city}
 Date: ${dateStr}
 Time: ${timeStr}
-Seats: ${booking.seats.join(', ')}
+Seats: ${booking.seatDetails?.length > 0 ? booking.seatDetails.map(s => `${s.number} (${s.category})`).join(', ') : booking.seats.join(', ')}
 
 Enjoy your show.
 

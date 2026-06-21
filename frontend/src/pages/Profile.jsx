@@ -74,8 +74,8 @@ export default function Profile({ session, setSession }) {
   }
 
   return (
-    <main style={{ minHeight: '100vh', paddingBottom: '96px', paddingTop: '120px' }}>
-      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 20px' }}>
+    <div className="profile-page-content">
+      <div>
         
         <p style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.25em', color: 'var(--cyan)' }}>Account</p>
         <h1 style={{ marginTop: '12px', fontSize: 'clamp(2.5rem, 4vw, 3.5rem)', fontWeight: '900', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
@@ -231,6 +231,6 @@ export default function Profile({ session, setSession }) {
         </section>
 
       </div>
-    </main>
+    </div>
   );
 }

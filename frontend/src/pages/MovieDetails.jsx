@@ -506,21 +506,25 @@ export default function MovieDetails({ user }) {
                 {formatDate(date)}
               </button>
             ))}
-          </div>
-          <div className="chip-row">
-            <button className={!selectedCity ? 'chip active' : 'chip'} onClick={() => setSelectedCity('')}>All cities</button>
-            {cities.map((city) => (
-              <button className={selectedCity === city ? 'chip active' : 'chip'} key={city} onClick={() => setSelectedCity(city)}>
-                <MapPin size={14} /> {city}
-              </button>
-            ))}
+            
+            {cities.length > 0 && (
+              <>
+                <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.15)', margin: '0 4px' }} />
+                <button className={!selectedCity ? 'chip active' : 'chip'} onClick={() => setSelectedCity('')}>All cities</button>
+                {cities.map((city) => (
+                  <button className={selectedCity === city ? 'chip active' : 'chip'} key={city} onClick={() => setSelectedCity(city)}>
+                    <MapPin size={14} /> {city}
+                  </button>
+                ))}
+              </>
+            )}
           </div>
 
           <div className="show-list">
             {visibleShows.map((show) => (
               <button className={show._id === selectedShowId ? 'show-option active' : 'show-option'} key={show._id} onClick={() => { setSelectedShowId(show._id); setSelectedSeats([]); }}>
                 <CalendarClock size={18} />
-                <span>{show.theater}, {show.city}<small>{formatTime(show.showTime)} | {show.screen} | {show.totalSeats - show.bookedSeats.length} seats left</small></span>
+                <span>{show.theater}, {show.city}<small>{formatTime(show.showTime)} &bull; Screen {show.screen} &bull; {show.totalSeats - show.bookedSeats.length} seats left</small></span>
                 <strong>Rs {show.prices?.silver || 180} - {show.prices?.premium || 350}</strong>
               </button>
             ))}
@@ -530,7 +534,7 @@ export default function MovieDetails({ user }) {
         <div className="glass-panel seat-panel">
           {selectedShow ? (
             <>
-              <div className="screen">IMAX SCREEN</div>
+              <div className="screen">SCREEN {selectedShow.screen}</div>
               <div className="legend-row">
                 <span><i className="legend-dot seat-premium" /> Premium (Rs {selectedShow.prices?.premium || 350})</span>
                 <span><i className="legend-dot seat-gold" /> Gold (Rs {selectedShow.prices?.gold || 250})</span>

@@ -139,8 +139,7 @@ button {
 
 .topbar {
   pointer-events: auto; /* Re-enable clicks for the actual navbar */
-  max-w-7xl: 1280px;
-  max-width: 1280px;
+  width: min(1380px, calc(100% - 36px));
   margin: 0 auto;
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -273,9 +272,9 @@ nav a.active::after {
   grid-template-columns: minmax(0, 1.05fr) 380px;
   align-items: center;
   gap: 0;
-  min-height: 680px;
-  padding: clamp(40px, 7vw, 88px) clamp(18px, 4vw, 58px);
-  margin-bottom: 36px;
+  min-height: 520px;
+  padding: clamp(40px, 5vw, 64px) clamp(24px, 4vw, 48px);
+  margin-bottom: 48px;
   overflow: hidden;
   border-radius: 28px;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -1804,7 +1803,7 @@ h3 {
 
 .movie-detail-page {
   display: grid;
-  gap: 22px;
+  gap: 48px;
 }
 
 /* ── Global Footer ── */
@@ -2002,9 +2001,9 @@ h3 {
 }
 
 .booking-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-  gap: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
 }
 
 .glass-panel {
@@ -2013,8 +2012,9 @@ h3 {
 
 .show-list {
   display: grid;
-  gap: 12px;
-  margin-top: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
 }
 
 .show-option {
@@ -2049,9 +2049,16 @@ h3 {
   color: var(--gold);
 }
 
+.movie-rail {
+  position: relative;
+  margin-bottom: 80px;
+}
+
 .screen {
   position: relative;
-  margin-bottom: 18px;
+  margin: 0 auto 24px;
+  max-width: 700px;
+  width: 100%;
   padding: 12px;
   color: #dfe8ff;
   text-align: center;
@@ -2062,10 +2069,11 @@ h3 {
 }
 
 .legend-row {
+  display: flex;
   justify-content: center;
   gap: 16px;
   flex-wrap: wrap;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
   color: var(--muted);
   font-weight: 800;
 }
@@ -2094,7 +2102,10 @@ h3 {
 .seat-grid {
   display: grid;
   grid-template-columns: repeat(10, minmax(36px, 1fr));
-  gap: 9px;
+  gap: 12px;
+  max-width: 700px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .seat {
@@ -2148,7 +2159,9 @@ h3 {
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  margin-top: 22px;
+  margin: 22px auto 0;
+  max-width: 700px;
+  width: 100%;
   padding: 16px;
   background: rgba(0, 0, 0, 0.26);
   border: 1px solid var(--line);

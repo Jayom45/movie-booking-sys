@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CalendarClock, CheckCircle2, Hash, MapPin, QrCode, Ticket, XCircle, Download, Mail } from 'lucide-react';
 import QRCode from 'qrcode';
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../api.js';
 import { generateAndOpenTicketPdf, generatePdfBlob } from '../pdfGenerator.jsx';
 import NotificationBanner from '../components/NotificationBanner.jsx';
@@ -157,59 +158,61 @@ function BookingTicket({ booking, index, onCancel, isShared }) {
                 <QrCode size={16} />
                 {qrOpen ? 'Hide QR Ticket' : 'Show QR Ticket'}
               </button>
-              <button
-                className="btn-pdf"
-                onClick={async () => {
-                  setGeneratingPdf(true);
-                  try {
-                    await generateAndOpenTicketPdf(booking);
-                  } finally {
-                    setGeneratingPdf(false);
-                  }
-                }}
-                disabled={generatingPdf}
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '0 16px', background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', color: 'white', borderRadius: '999px', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }}
-              >
-                <Download size={15} />
-                {generatingPdf ? 'Opening...' : 'Download PDF'}
-              </button>
-              <button
-                className="btn-email"
-                onClick={async () => {
-                  setEmailing(true);
-                  try {
-                    const pdfBlob = await generatePdfBlob(booking);
-                    const formData = new FormData();
-                    formData.append('ticketPdf', pdfBlob, `ticket-${booking._id}.pdf`);
-                    const res = await api(`/bookings/${booking._id}/email`, {
-                      method: 'POST',
-                      body: formData
-                    });
-                    alert(res.message || 'Ticket sent successfully!');
-                  } catch (err) {
-                    alert(err.message || 'Failed to email ticket.');
-                  } finally {
-                    setEmailing(false);
-                  }
-                }}
-                disabled={emailing}
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '0 16px', background: 'rgba(59, 130, 246, 0.15)', border: '1px solid rgba(59, 130, 246, 0.3)', color: '#93c5fd', borderRadius: '999px', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }}
-              >
-                <Mail size={15} />
-                {emailing ? 'Sending...' : 'Email Ticket'}
-              </button>
               {!isShared && (
-                <button
-                  className="btn-cancel"
-                  onClick={async () => {
-                    setCancelling(true);
-                    await onCancel(booking._id);
-                    setCancelling(false);
-                  }}
-                  disabled={cancelling}
-                >
-                  {cancelling ? 'Cancelling...' : 'Cancel Booking'}
-                </button>
+                <>
+                  <button
+                    className="btn-pdf"
+                    onClick={async () => {
+                      setGeneratingPdf(true);
+                      try {
+                        await generateAndOpenTicketPdf(booking);
+                      } finally {
+                        setGeneratingPdf(false);
+                      }
+                    }}
+                    disabled={generatingPdf}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '0 16px', background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', color: 'white', borderRadius: '999px', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }}
+                  >
+                    <Download size={15} />
+                    {generatingPdf ? 'Opening...' : 'Download PDF'}
+                  </button>
+                  <button
+                    className="btn-email"
+                    onClick={async () => {
+                      setEmailing(true);
+                      try {
+                        const pdfBlob = await generatePdfBlob(booking);
+                        const formData = new FormData();
+                        formData.append('ticketPdf', pdfBlob, `ticket-${booking._id}.pdf`);
+                        const res = await api(`/bookings/${booking._id}/email`, {
+                          method: 'POST',
+                          body: formData
+                        });
+                        alert(res.message || 'Ticket sent successfully!');
+                      } catch (err) {
+                        alert(err.message || 'Failed to email ticket.');
+                      } finally {
+                        setEmailing(false);
+                      }
+                    }}
+                    disabled={emailing}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '0 16px', background: 'rgba(59, 130, 246, 0.15)', border: '1px solid rgba(59, 130, 246, 0.3)', color: '#93c5fd', borderRadius: '999px', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }}
+                  >
+                    <Mail size={15} />
+                    {emailing ? 'Sending...' : 'Email Ticket'}
+                  </button>
+                  <button
+                    className="btn-cancel"
+                    onClick={async () => {
+                      setCancelling(true);
+                      await onCancel(booking._id);
+                      setCancelling(false);
+                    }}
+                    disabled={cancelling}
+                  >
+                    {cancelling ? 'Cancelling...' : 'Cancel Booking'}
+                  </button>
+                </>
               )}
             </>
           )}
@@ -252,7 +255,21 @@ export default function MyBookings() {
   const [sharedBookings, setSharedBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  
+  const [searchParams, setSearchParams] = useSearchParams();
   const [filter, setFilter] = useState('all');
+
+  useEffect(() => {
+    const filterParam = searchParams.get('filter');
+    if (filterParam) {
+      setFilter(filterParam);
+    }
+  }, [searchParams]);
+
+  const handleFilterChange = (newFilter) => {
+    setFilter(newFilter);
+    setSearchParams({ filter: newFilter });
+  };
 
   useEffect(() => {
     Promise.all([
@@ -262,10 +279,19 @@ export default function MyBookings() {
       .then(([myB, sharedB]) => {
         setBookings(myB);
         setSharedBookings(sharedB);
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const filterParam = urlParams.get('filter');
+        if (filterParam) {
+          setFilter(filterParam);
+        } else if (myB.length === 0 && sharedB.length > 0) {
+          setFilter('shared');
+          setSearchParams({ filter: 'shared' }, { replace: true });
+        }
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, []); // Run only once on mount
 
   const handleCancelBooking = async (bookingId) => {
     try {
@@ -309,7 +335,7 @@ export default function MyBookings() {
       <NotificationBanner />
 
       {/* ── Filters ── */}
-      {!loading && !error && bookings.length > 0 && (
+      {!loading && !error && (bookings.length > 0 || sharedBookings.length > 0) && (
         <div className="filter-tabs" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '10px', marginTop: '20px' }}>
           {[
             { id: 'all', label: 'All', count: counts.all },
@@ -320,7 +346,7 @@ export default function MyBookings() {
           ].map(tab => (
             <button
               key={tab.id}
-              onClick={() => setFilter(tab.id)}
+              onClick={() => handleFilterChange(tab.id)}
               style={{
                 padding: '8px 16px',
                 borderRadius: '999px',

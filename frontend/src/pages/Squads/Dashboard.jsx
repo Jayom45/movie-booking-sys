@@ -306,7 +306,7 @@ export default function SquadDashboard({ user }) {
                       <strong style={{ fontFamily: 'monospace', letterSpacing: '2px', color: 'var(--gold)' }}>{squad.bookingRef}</strong>
                     </div>
                   )}
-                  <Link to="/bookings" className="button primary" style={{ marginTop: '16px', textAlign: 'center' }}>
+                  <Link to={isHost ? "/bookings" : "/bookings?filter=shared"} className="button primary" style={{ marginTop: '16px', textAlign: 'center' }}>
                     View Tickets in My Bookings
                   </Link>
                 </div>

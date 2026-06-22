@@ -50,7 +50,7 @@ router.get('/shared', protect, async (req, res) => {
     })
     .populate({
       path: 'show',
-      populate: { path: 'movie theater' }
+      populate: { path: 'movie' }
     })
     .populate('user', 'name')
     .sort({ createdAt: -1 });
@@ -184,7 +184,7 @@ router.post('/', protect, async (req, res) => {
             userId: m.userId,
             title: '🎬 Your CineSquad plan has been booked.',
             message: `Movie: ${booking.show.movie.title} | Booked By: ${req.user.name} | Date: ${new Date(booking.show.showTime).toLocaleString([], {weekday: 'long', hour: '2-digit', minute:'2-digit'})} | Theatre: ${booking.show.theater?.name || booking.show.city}`,
-            link: `/bookings`
+            link: `/bookings?filter=shared`
           });
         }
       }

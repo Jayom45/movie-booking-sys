@@ -55,7 +55,7 @@ router.post('/validate-coupon', protect, async (req, res) => {
 // ─── POST /api/bookings ──────────────────────────────────────────────────────
 router.post('/', protect, async (req, res) => {
   try {
-    const { showId, seats, couponCode } = req.body;
+    const { showId, seats, couponCode, squadId } = req.body;
 
     if (!showId || !Array.isArray(seats) || seats.length === 0) {
       return res.status(400).json({ message: 'Show and at least one seat are required' });
@@ -117,13 +117,28 @@ router.post('/', protect, async (req, res) => {
       finalAmount,
       couponCode: couponCode ? couponCode.toUpperCase() : null,
       totalAmount: finalAmount, // Overrides totalAmount so legacy analytics use finalAmount
-      bookingRef: generateBookingRef()
+      bookingRef: generateBookingRef(),
+      squadId: squadId || undefined
     });
 
     await booking.populate({
       path: 'show',
-      populate: { path: 'movie' }
+      populate: { path: 'movie theater' }
     });
+
+    if (squadId) {
+      // Need mongoose model Squad, we can import or use mongoose.model
+      const mongoose = (await import('mongoose')).default;
+      const Squad = mongoose.model('Squad');
+      await Squad.findByIdAndUpdate(squadId, {
+        status: 'completed',
+        movie: booking.show.movie.title,
+        theater: booking.show.theater?.name || booking.show.city,
+        showTime: booking.show.showTime,
+        bookingRef: booking.bookingRef,
+        completionDate: new Date()
+      });
+    }
 
     res.status(201).json(booking);
   } catch (error) {

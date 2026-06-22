@@ -337,8 +337,8 @@ export default function SquadDashboard({ user }) {
                               <div style={{ fontWeight: 'bold' }}>{show.movie.title}</div>
                               <div style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>{show.theater.name} &bull; {new Date(show.showTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
                             </div>
-                            <Link to={`/movies/${show.movie._id}?showId=${show._id}`} className="button primary" style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
-                              Proceed
+                            <Link to={`/movies/${show.movie._id}?showId=${show._id}&squadId=${id}`} className="button primary" style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
+                              Proceed To Booking
                             </Link>
                           </div>
                         ))}

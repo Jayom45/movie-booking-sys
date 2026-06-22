@@ -373,6 +373,7 @@ export default function MovieDetails({ user }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const preselectedShowId = searchParams.get('showId');
+  const squadId = searchParams.get('squadId');
   const [movie, setMovie] = useState(null);
   const [shows, setShows] = useState([]);
   const [selectedShowId, setSelectedShowId] = useState('');
@@ -479,7 +480,8 @@ export default function MovieDetails({ user }) {
         show: selectedShow,
         seats: selectedSeats,
         baseTotal: total,
-        convenienceFee: 40 // Flat fee in Rs
+        convenienceFee: 40, // Flat fee in Rs
+        squadId
       }
     });
   }

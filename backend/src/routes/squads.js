@@ -202,4 +202,51 @@ router.get('/:id/recommendations', protect, async (req, res) => {
   }
 });
 
+// 8. Host Controls (Cancel, Archive, Delete)
+router.post('/:id/cancel', protect, async (req, res) => {
+  try {
+    const squad = await Squad.findById(req.params.id);
+    if (!squad) return res.status(404).json({ message: 'Squad not found' });
+    if (squad.hostId.toString() !== req.user._id.toString()) return res.status(403).json({ message: 'Not authorized' });
+    
+    squad.status = 'cancelled';
+    await squad.save();
+    res.json(squad);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.post('/:id/archive', protect, async (req, res) => {
+  try {
+    const squad = await Squad.findById(req.params.id);
+    if (!squad) return res.status(404).json({ message: 'Squad not found' });
+    if (squad.hostId.toString() !== req.user._id.toString()) return res.status(403).json({ message: 'Not authorized' });
+    
+    squad.status = 'archived';
+    await squad.save();
+    res.json(squad);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.delete('/:id', protect, async (req, res) => {
+  try {
+    const squad = await Squad.findById(req.params.id);
+    if (!squad) return res.status(404).json({ message: 'Squad not found' });
+    if (squad.hostId.toString() !== req.user._id.toString()) return res.status(403).json({ message: 'Not authorized' });
+    
+    if (squad.status === 'completed' || squad.bookingRef) {
+      return res.status(400).json({ message: 'Cannot delete a squad with a completed booking. Archive it instead.' });
+    }
+    
+    await SquadMember.deleteMany({ squadId: squad._id });
+    await Squad.findByIdAndDelete(squad._id);
+    res.json({ message: 'Squad deleted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 export default router;

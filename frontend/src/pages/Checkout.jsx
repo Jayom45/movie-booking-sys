@@ -84,7 +84,7 @@ export default function Checkout() {
       // 2. Create the real booking
       await api('/bookings', {
         method: 'POST',
-        body: JSON.stringify({ showId: show._id, seats, couponCode: appliedCoupon?.code })
+        body: JSON.stringify({ showId: show._id, seats, couponCode: appliedCoupon?.code, squadId: state.squadId })
       });
 
       // 3. Show success state briefly, then redirect

@@ -7,9 +7,15 @@ const squadSchema = new mongoose.Schema(
     hostId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     status: {
       type: String,
-      enum: ['gathering', 'ready', 'booked', 'cancelled'],
+      enum: ['gathering', 'voting', 'ready', 'booking in progress', 'completed', 'cancelled', 'archived'],
       default: 'gathering',
     },
+    // Automatic Completion fields
+    movie: { type: String },
+    theater: { type: String },
+    showTime: { type: Date },
+    bookingRef: { type: String },
+    completionDate: { type: Date }
   },
   { timestamps: true }
 );

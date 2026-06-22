@@ -2424,6 +2424,113 @@ select option {
   padding: 24px;
 }
 
+/* ─── Add Show Form — structured sections ─────────────────────────────────── */
+.show-form-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 18px 0 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.show-form-section:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.show-form-section-title {
+  margin: 0 0 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.show-form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+/* Timeslot chip buttons */
+.show-timeslots-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.show-timeslots-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.timeslot-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  user-select: none;
+  border: 1.5px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.65);
+  transition: border-color 180ms ease, background 180ms ease, color 180ms ease, transform 120ms ease;
+}
+
+.timeslot-chip:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(250, 189, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.timeslot-chip--active {
+  border-color: var(--gold) !important;
+  background: rgba(250, 189, 0, 0.18) !important;
+  color: var(--gold) !important;
+  box-shadow: 0 0 12px rgba(250, 189, 0, 0.2);
+}
+
+/* Bulk result feedback */
+.show-bulk-result {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.show-bulk-success,
+.show-bulk-warn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.show-bulk-success {
+  background: rgba(74, 222, 128, 0.12);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  color: #4ade80;
+}
+
+.show-bulk-warn {
+  background: rgba(250, 189, 0, 0.1);
+  border: 1px solid rgba(250, 189, 0, 0.28);
+  color: var(--gold);
+}
+
+
 .empty-state {
   display: grid;
   place-items: center;

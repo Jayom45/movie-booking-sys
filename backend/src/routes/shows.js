@@ -51,7 +51,7 @@ router.get('/:id', async (req, res) => {
   res.json(show);
 });
 
-// ─── POST /api/shows  (admin) ─────────────────────────────────────────────────
+// ─── POST /api/shows  (admin — single show) ───────────────────────────────────
 router.post('/', protect, adminOnly, async (req, res) => {
   const { movie, theater, city, screen, showTime, pricePremium, priceGold, priceSilver, totalSeats } = req.body;
   const show = await Show.create({
@@ -64,6 +64,52 @@ router.post('/', protect, adminOnly, async (req, res) => {
   });
   await show.populate('movie');
   res.status(201).json(show);
+});
+
+// ─── POST /api/shows/bulk  (admin — create multiple shows for selected time slots) ─
+// Body: { movie, theater, city, screen, showTimes: [ISO strings], pricePremium, priceGold, priceSilver, totalSeats }
+// Returns: { created: [...], duplicates: [...] }
+router.post('/bulk', protect, adminOnly, async (req, res) => {
+  try {
+    const {
+      movie, theater, city, screen,
+      showTimes,
+      pricePremium, priceGold, priceSilver, totalSeats
+    } = req.body;
+
+    if (!Array.isArray(showTimes) || showTimes.length === 0) {
+      return res.status(400).json({ message: 'At least one showTime is required.' });
+    }
+
+    const prices = {
+      premium: Number(pricePremium) || 350,
+      gold:    Number(priceGold)    || 250,
+      silver:  Number(priceSilver)  || 180,
+    };
+
+    const created = [];
+    const duplicates = [];
+
+    for (const showTime of showTimes) {
+      const existing = await Show.findOne({ movie, theater, showTime: new Date(showTime) });
+      if (existing) {
+        duplicates.push(showTime);
+        continue;
+      }
+      const show = await Show.create({
+        movie, theater, city, screen,
+        showTime: new Date(showTime),
+        totalSeats: Number(totalSeats) || 40,
+        prices,
+      });
+      await show.populate('movie', 'title');
+      created.push(show);
+    }
+
+    res.status(201).json({ created, duplicates });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 // ─── PUT /api/shows/:id  (admin — edit show) ──────────────────────────────────

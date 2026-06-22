@@ -754,36 +754,103 @@ function AddMovieForm({ movies, setMovies }) {
   );
 }
 
-// ─── Add Show form ────────────────────────────────────────────────────────────
-const emptyShow = { movie: '', theater: '', city: '', screen: '', showTime: '', pricePremium: 350, priceGold: 250, priceSilver: 180, totalSeats: 40 };
+// ─── Add Show form — city / theatre data ─────────────────────────────────────
+const CITY_THEATRES = {
+  'Mumbai City': ['Metro Cinema', 'PVR Phoenix', 'INOX Nariman Point'],
+  'Mumbai Suburban': ['PVR Andheri', 'Cinepolis Andheri', 'INOX Malad'],
+  'Navi Mumbai': ['Seawoods Grand Central', 'Inorbit Vashi', 'Nexus Mall'],
+  'Thane': ['Viviana Mall', 'Korum Mall', 'Cinepolis Thane'],
+};
+const CITIES = Object.keys(CITY_THEATRES);
 
-const showLabelMap = {
-  theater: 'Theatre',
-  city: 'City',
-  screen: 'Screen',
-  showTime: 'Show Time',
-  pricePremium: 'Premium Price (Rs)',
-  priceGold: 'Gold Price (Rs)',
-  priceSilver: 'Silver Price (Rs)',
-  totalSeats: 'Total Seats'
+const TIME_SLOTS = [
+  { label: '10:00 AM', value: '10:00' },
+  { label: '01:00 PM', value: '13:00' },
+  { label: '04:00 PM', value: '16:00' },
+  { label: '07:00 PM', value: '19:00' },
+  { label: '10:00 PM', value: '22:00' },
+];
+
+const emptyShowBulk = {
+  movie: '',
+  city: '',
+  theater: '',
+  screen: '',
+  date: '',
+  selectedTimes: [],
+  pricePremium: 350,
+  priceGold: 250,
+  priceSilver: 180,
+  totalSeats: 40,
 };
 
 function AddShowForm({ movies, shows, setShows }) {
-  const [form, setForm] = useState(emptyShow);
+  const [form, setForm] = useState(emptyShowBulk);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState('');
+  const [result, setResult] = useState(null); // { created, duplicates }
   const [error, setError] = useState('');
+
+  // When city changes, reset theatre
+  function handleCityChange(city) {
+    setForm((prev) => ({ ...prev, city, theater: '' }));
+  }
+
+  function toggleTime(val) {
+    setForm((prev) => ({
+      ...prev,
+      selectedTimes: prev.selectedTimes.includes(val)
+        ? prev.selectedTimes.filter((t) => t !== val)
+        : [...prev.selectedTimes, val],
+    }));
+  }
 
   async function submit(e) {
     e.preventDefault();
+    setResult(null);
+    setError('');
+
+    if (form.selectedTimes.length === 0) {
+      setError('Please select at least one showtime slot.');
+      return;
+    }
+    if (!form.date) {
+      setError('Please select a date.');
+      return;
+    }
+
+    // Build ISO datetime strings for each selected slot
+    const showTimes = form.selectedTimes.map((t) => {
+      const [hh, mm] = t.split(':');
+      return `${form.date}T${hh.padStart(2, '0')}:${mm}:00`;
+    });
+
     try {
       setSaving(true);
-      setError('');
-      const created = await api('/shows', { method: 'POST', body: JSON.stringify(form) });
-      setShows((prev) => [created, ...prev]);
-      setForm(emptyShow);
-      setMessage('Show added successfully.');
-      setTimeout(() => setMessage(''), 3000);
+      const data = await api('/shows/bulk', {
+        method: 'POST',
+        body: JSON.stringify({
+          movie:       form.movie,
+          theater:     form.theater,
+          city:        form.city,
+          screen:      form.screen,
+          showTimes,
+          pricePremium: Number(form.pricePremium),
+          priceGold:    Number(form.priceGold),
+          priceSilver:  Number(form.priceSilver),
+          totalSeats:   Number(form.totalSeats),
+        }),
+      });
+
+      // Prepend newly created shows to the table
+      if (data.created?.length) {
+        setShows((prev) => [...data.created, ...prev]);
+      }
+
+      setResult(data);
+      if (data.created?.length > 0) {
+        // Reset form on success (but keep movie selected for convenience)
+        setForm((prev) => ({ ...emptyShowBulk, movie: prev.movie, city: prev.city, theater: prev.theater }));
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -791,32 +858,170 @@ function AddShowForm({ movies, shows, setShows }) {
     }
   }
 
+  const theatresForCity = form.city ? (CITY_THEATRES[form.city] || []) : [];
+
   return (
-    <motion.form className="admin-form glass-panel" onSubmit={submit} initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+    <motion.div
+      className="admin-form glass-panel"
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.08 }}
+      style={{ display: 'flex', flexDirection: 'column', gap: 0 }}
+    >
       <span className="premium-label"><Settings size={14} /> Scheduling</span>
       <h2>Add Show</h2>
-      <label>
-        Movie
-        <select value={form.movie} onChange={(e) => setForm({ ...form, movie: e.target.value })} required>
-          <option value="">Select movie</option>
-          {movies.filter((m) => m.isActive).map((m) => <option key={m._id} value={m._id}>{m.title}</option>)}
-        </select>
-      </label>
-      {Object.keys(emptyShow).filter((k) => k !== 'movie').map((key) => (
-        <label key={key}>
-          {showLabelMap[key] || key}
-          <input
-            type={key === 'showTime' ? 'datetime-local' : key.includes('price') || key === 'totalSeats' ? 'number' : 'text'}
-            value={form[key]}
-            onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-            required
-          />
-        </label>
-      ))}
-      {message && <div className="success">{message}</div>}
-      {error && <div className="alert">{error}</div>}
-      <button className="button primary" disabled={saving}><Plus size={17} /> {saving ? 'Adding…' : 'Add Show'}</button>
-    </motion.form>
+
+      <form onSubmit={submit} style={{ display: 'contents' }}>
+        {/* ── Movie Information ── */}
+        <div className="show-form-section">
+          <p className="show-form-section-title"><Film size={13} /> Movie Information</p>
+          <label>
+            Movie
+            <select
+              value={form.movie}
+              onChange={(e) => setForm({ ...form, movie: e.target.value })}
+              required
+            >
+              <option value="">Select a movie…</option>
+              {movies.filter((m) => m.isActive).map((m) => (
+                <option key={m._id} value={m._id}>{m.title}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        {/* ── Location ── */}
+        <div className="show-form-section">
+          <p className="show-form-section-title"><Settings size={13} /> Location</p>
+          <div className="show-form-row">
+            <label>
+              City
+              <select
+                value={form.city}
+                onChange={(e) => handleCityChange(e.target.value)}
+                required
+              >
+                <option value="">Select city…</option>
+                {CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </label>
+            <label>
+              Theatre
+              <select
+                value={form.theater}
+                onChange={(e) => setForm({ ...form, theater: e.target.value })}
+                required
+                disabled={!form.city}
+              >
+                <option value="">{form.city ? 'Select theatre…' : 'Select city first'}</option>
+                {theatresForCity.map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </label>
+            <label>
+              Screen
+              <input
+                type="text"
+                placeholder="e.g. Screen 1"
+                value={form.screen}
+                onChange={(e) => setForm({ ...form, screen: e.target.value })}
+                required
+              />
+            </label>
+          </div>
+        </div>
+
+        {/* ── Schedule ── */}
+        <div className="show-form-section">
+          <p className="show-form-section-title"><CalendarClock size={13} /> Schedule</p>
+          <label style={{ maxWidth: '220px' }}>
+            Date
+            <input
+              type="date"
+              value={form.date}
+              onChange={(e) => setForm({ ...form, date: e.target.value })}
+              required
+              min={new Date().toISOString().slice(0, 10)}
+            />
+          </label>
+          <div className="show-timeslots-wrap">
+            <p style={{ margin: '10px 0 8px', fontSize: '0.82rem', color: 'rgba(255,255,255,0.55)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Time Slots</p>
+            <div className="show-timeslots-grid">
+              {TIME_SLOTS.map(({ label, value }) => (
+                <label
+                  key={value}
+                  className={`timeslot-chip ${form.selectedTimes.includes(value) ? 'timeslot-chip--active' : ''}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={form.selectedTimes.includes(value)}
+                    onChange={() => toggleTime(value)}
+                    style={{ display: 'none' }}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Pricing ── */}
+        <div className="show-form-section">
+          <p className="show-form-section-title"><Ticket size={13} /> Pricing &amp; Capacity</p>
+          <div className="show-form-row">
+            <label>
+              Premium (Rs)
+              <input type="number" min={0} value={form.pricePremium} onChange={(e) => setForm({ ...form, pricePremium: e.target.value })} required />
+            </label>
+            <label>
+              Gold (Rs)
+              <input type="number" min={0} value={form.priceGold} onChange={(e) => setForm({ ...form, priceGold: e.target.value })} required />
+            </label>
+            <label>
+              Silver (Rs)
+              <input type="number" min={0} value={form.priceSilver} onChange={(e) => setForm({ ...form, priceSilver: e.target.value })} required />
+            </label>
+            <label>
+              Total Seats
+              <input type="number" min={1} value={form.totalSeats} onChange={(e) => setForm({ ...form, totalSeats: e.target.value })} required />
+            </label>
+          </div>
+        </div>
+
+        {/* ── Feedback ── */}
+        {result && (
+          <div className="show-bulk-result">
+            {result.created?.length > 0 && (
+              <div className="show-bulk-success">
+                <CheckCircle2 size={15} />
+                <span>{result.created.length} show{result.created.length > 1 ? 's' : ''} created successfully.</span>
+              </div>
+            )}
+            {result.duplicates?.length > 0 && (
+              <div className="show-bulk-warn">
+                <XCircle size={15} />
+                <span>{result.duplicates.length} slot{result.duplicates.length > 1 ? 's' : ''} skipped — duplicate already exists.</span>
+              </div>
+            )}
+          </div>
+        )}
+        {error && <div className="alert">{error}</div>}
+
+        <button
+          type="submit"
+          className="button primary"
+          disabled={saving}
+          style={{ marginTop: '4px', alignSelf: 'flex-start' }}
+        >
+          <Plus size={17} />
+          {saving
+            ? 'Creating…'
+            : form.selectedTimes.length > 1
+            ? `Create ${form.selectedTimes.length} Shows`
+            : 'Create Show'
+          }
+        </button>
+      </form>
+    </motion.div>
   );
 }
 

@@ -4,6 +4,7 @@ import QRCode from 'qrcode';
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 import { generateAndOpenTicketPdf, generatePdfBlob } from '../pdfGenerator.jsx';
+import NotificationBanner from '../components/NotificationBanner.jsx';
 
 // ─── Build the plain-text QR payload ─────────────────────────────────────────
 function buildQrPayload(booking) {
@@ -304,6 +305,8 @@ export default function MyBookings() {
         <h1>My Bookings</h1>
         <p>All confirmed seats, showtimes, and QR ticket passes in one premium library.</p>
       </div>
+
+      <NotificationBanner />
 
       {/* ── Filters ── */}
       {!loading && !error && bookings.length > 0 && (

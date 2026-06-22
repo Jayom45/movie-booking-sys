@@ -166,7 +166,11 @@ router.post('/', protect, async (req, res) => {
         theater: booking.show.theater?.name || booking.show.city,
         showTime: booking.show.showTime,
         bookingRef: booking.bookingRef,
-        completionDate: new Date()
+        completionDate: new Date(),
+        bookingId: booking._id,
+        movieId: booking.show.movie._id,
+        showId: booking.show._id,
+        attendeeCount: booking.seats.length
       });
 
       // Create Notifications for all accepted members

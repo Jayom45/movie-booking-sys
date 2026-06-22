@@ -15,7 +15,11 @@ const squadSchema = new mongoose.Schema(
     theater: { type: String },
     showTime: { type: Date },
     bookingRef: { type: String },
-    completionDate: { type: Date }
+    completionDate: { type: Date },
+    bookingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Booking' },
+    movieId: { type: mongoose.Schema.Types.ObjectId, ref: 'Movie' },
+    showId: { type: mongoose.Schema.Types.ObjectId, ref: 'Show' },
+    attendeeCount: { type: Number }
   },
   { timestamps: true }
 );

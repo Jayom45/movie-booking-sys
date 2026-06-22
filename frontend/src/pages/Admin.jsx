@@ -676,17 +676,6 @@ const emptyMovie = {
   durationMinutes: 120, rating: 7, posterUrl: '', trailerUrl: '', releaseDate: ''
 };
 
-const movieLabelMap = {
-  title: 'Title',
-  description: 'Description',
-  genre: 'Genre',
-  language: 'Language',
-  durationMinutes: 'Duration (min)',
-  rating: 'Rating (0–10)',
-  posterUrl: 'Poster URL',
-  releaseDate: 'Release Date'
-};
-
 function AddMovieForm({ movies, setMovies }) {
   const [form, setForm] = useState(emptyMovie);
   const [saving, setSaving] = useState(false);
@@ -711,46 +700,140 @@ function AddMovieForm({ movies, setMovies }) {
   }
 
   return (
-    <motion.form className="admin-form glass-panel" onSubmit={submit} initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}>
+    <motion.div
+      className="admin-form glass-panel"
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      style={{ display: 'flex', flexDirection: 'column', gap: 0 }}
+    >
       <span className="premium-label"><MonitorPlay size={14} /> Catalog</span>
       <h2>Add Movie</h2>
-      {Object.keys(emptyMovie).map((key) => (
-        <div key={key}>
-          {key === 'genre' ? (
-            <div className="form-group" style={{ marginBottom: '14px' }}>
-              <label style={{ display: 'block', marginBottom: '8px' }}>{movieLabelMap[key]}</label>
-              <div className="genre-grid">
-                {ALLOWED_GENRES.map(g => (
-                  <label key={g} className="genre-checkbox">
-                    <input
-                      type="checkbox"
-                      checked={form[key].includes(g)}
-                      onChange={(e) => {
-                        if (e.target.checked) setForm({ ...form, [key]: [...form[key], g] });
-                        else setForm({ ...form, [key]: form[key].filter(x => x !== g) });
-                      }}
-                    /> {g}
-                  </label>
-                ))}
-              </div>
-            </div>
-          ) : (
+
+      <form onSubmit={submit} style={{ display: 'contents' }}>
+        {/* ── Movie Details ── */}
+        <div className="show-form-section">
+          <p className="show-form-section-title"><Film size={13} /> Movie Details</p>
+          <label>
+            Title
+            <input
+              type="text"
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              placeholder="e.g. Interstellar"
+              required
+            />
+          </label>
+          <label>
+            Description
+            <input
+              type="text"
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              placeholder="Short synopsis"
+              required
+            />
+          </label>
+          <div className="movie-meta-row">
             <label>
-              {movieLabelMap[key] || key}
+              Language
               <input
-                type={key === 'releaseDate' ? 'date' : ['durationMinutes', 'rating'].includes(key) ? 'number' : 'text'}
-                value={form[key]}
-                onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                type="text"
+                value={form.language}
+                onChange={(e) => setForm({ ...form, language: e.target.value })}
+                placeholder="e.g. Hindi"
                 required
               />
             </label>
-          )}
+            <label>
+              Release Date
+              <input
+                type="date"
+                value={form.releaseDate}
+                onChange={(e) => setForm({ ...form, releaseDate: e.target.value })}
+                required
+              />
+            </label>
+          </div>
+          <div className="movie-meta-row">
+            <label>
+              Duration (min)
+              <input
+                type="number"
+                value={form.durationMinutes}
+                onChange={(e) => setForm({ ...form, durationMinutes: e.target.value })}
+                min={1}
+                required
+              />
+            </label>
+            <label>
+              Rating (0–10)
+              <input
+                type="number"
+                value={form.rating}
+                onChange={(e) => setForm({ ...form, rating: e.target.value })}
+                min={0} max={10} step={0.1}
+                required
+              />
+            </label>
+          </div>
         </div>
-      ))}
-      {message && <div className="success">{message}</div>}
-      {error && <div className="alert">{error}</div>}
-      <button className="button primary" disabled={saving}><Plus size={17} /> {saving ? 'Adding…' : 'Add Movie'}</button>
-    </motion.form>
+
+        {/* ── Media ── */}
+        <div className="show-form-section">
+          <p className="show-form-section-title"><MonitorPlay size={13} /> Media</p>
+          <label>
+            Poster URL
+            <input
+              type="text"
+              value={form.posterUrl}
+              onChange={(e) => setForm({ ...form, posterUrl: e.target.value })}
+              placeholder="https://…"
+              required
+            />
+          </label>
+          <label>
+            Trailer URL <span style={{ fontWeight: 400, opacity: 0.5 }}>(optional)</span>
+            <input
+              type="text"
+              value={form.trailerUrl}
+              onChange={(e) => setForm({ ...form, trailerUrl: e.target.value })}
+              placeholder="https://youtube.com/…"
+            />
+          </label>
+        </div>
+
+        {/* ── Genre ── */}
+        <div className="show-form-section">
+          <p className="show-form-section-title"><Ticket size={13} /> Genre</p>
+          <div className="genre-grid">
+            {ALLOWED_GENRES.map(g => (
+              <label key={g} className="genre-checkbox">
+                <input
+                  type="checkbox"
+                  checked={form.genre.includes(g)}
+                  onChange={(e) => {
+                    if (e.target.checked) setForm({ ...form, genre: [...form.genre, g] });
+                    else setForm({ ...form, genre: form.genre.filter(x => x !== g) });
+                  }}
+                /> {g}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {message && <div className="success">{message}</div>}
+        {error && <div className="alert">{error}</div>}
+
+        <button
+          type="submit"
+          className="button primary"
+          disabled={saving}
+          style={{ marginTop: '4px', alignSelf: 'flex-start' }}
+        >
+          <Plus size={17} /> {saving ? 'Adding…' : 'Add Movie'}
+        </button>
+      </form>
+    </motion.div>
   );
 }
 
@@ -944,7 +1027,7 @@ function AddShowForm({ movies, shows, setShows }) {
             />
           </label>
           <div className="show-timeslots-wrap">
-            <p style={{ margin: '10px 0 8px', fontSize: '0.82rem', color: 'rgba(255,255,255,0.55)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Time Slots</p>
+            <p className="show-timeslots-label">Time Slots</p>
             <div className="show-timeslots-grid">
               {TIME_SLOTS.map(({ label, value }) => (
                 <label
@@ -967,7 +1050,7 @@ function AddShowForm({ movies, shows, setShows }) {
         {/* ── Pricing ── */}
         <div className="show-form-section">
           <p className="show-form-section-title"><Ticket size={13} /> Pricing &amp; Capacity</p>
-          <div className="show-form-row">
+          <div className="show-form-row cols-4">
             <label>
               Premium (Rs)
               <input type="number" min={0} value={form.pricePremium} onChange={(e) => setForm({ ...form, pricePremium: e.target.value })} required />

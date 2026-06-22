@@ -31,6 +31,36 @@ router.get('/mine', protect, async (req, res) => {
   res.json(bookings);
 });
 
+// ─── GET /api/bookings/shared ─────────────────────────────────────────────────
+router.get('/shared', protect, async (req, res) => {
+  try {
+    // Need mongoose model SquadMember
+    const mongoose = (await import('mongoose')).default;
+    const SquadMember = mongoose.model('SquadMember');
+    
+    // Find all squads where user is an accepted member
+    const memberships = await SquadMember.find({ email: req.user.email, status: 'accepted' });
+    const squadIds = memberships.map(m => m.squadId);
+    
+    // Find bookings for these squads where user is NOT the host/booker
+    const sharedBookings = await Booking.find({
+      squadId: { $in: squadIds },
+      user: { $ne: req.user._id },
+      status: 'confirmed'
+    })
+    .populate({
+      path: 'show',
+      populate: { path: 'movie theater' }
+    })
+    .populate('user', 'name')
+    .sort({ createdAt: -1 });
+
+    res.json(sharedBookings);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // ─── POST /api/bookings/validate-coupon ──────────────────────────────────────
 router.post('/validate-coupon', protect, async (req, res) => {
   try {
@@ -138,6 +168,22 @@ router.post('/', protect, async (req, res) => {
         bookingRef: booking.bookingRef,
         completionDate: new Date()
       });
+
+      // Create Notifications for all accepted members
+      const SquadMember = mongoose.model('SquadMember');
+      const Notification = mongoose.model('Notification');
+      
+      const members = await SquadMember.find({ squadId, status: 'accepted' });
+      for (const m of members) {
+        if (m.userId && m.userId.toString() !== req.user._id.toString()) {
+          await Notification.create({
+            userId: m.userId,
+            title: '🎬 Your CineSquad plan has been booked.',
+            message: `Movie: ${booking.show.movie.title} | Booked By: ${req.user.name} | Date: ${new Date(booking.show.showTime).toLocaleString([], {weekday: 'long', hour: '2-digit', minute:'2-digit'})} | Theatre: ${booking.show.theater?.name || booking.show.city}`,
+            link: `/bookings`
+          });
+        }
+      }
     }
 
     res.status(201).json(booking);

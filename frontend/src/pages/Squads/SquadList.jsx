@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Clapperboard, Clock, ArrowRight, Bell, Check, X } from 'lucide-react';
 import { api } from '../../api.js';
+import NotificationBanner from '../../components/NotificationBanner.jsx';
 
 export default function SquadList() {
   const [squads, setSquads] = useState([]);
@@ -34,7 +35,50 @@ export default function SquadList() {
   };
 
   const pendingInvites = squads.filter(s => s.myStatus === 'pending');
-  const activeSquads = squads.filter(s => s.myStatus === 'accepted');
+  const acceptedSquads = squads.filter(s => s.myStatus === 'accepted');
+  
+  const activeSquads = acceptedSquads.filter(s => ['gathering', 'voting', 'ready', 'booking in progress'].includes(s.status) || !s.status);
+  const completedSquads = acceptedSquads.filter(s => s.status === 'completed');
+  const cancelledSquads = acceptedSquads.filter(s => s.status === 'cancelled');
+  const archivedSquads = acceptedSquads.filter(s => s.status === 'archived');
+
+  const getStatusBadge = (status) => {
+    switch(status) {
+      case 'completed': return <span style={{ padding: '4px 8px', borderRadius: '4px', background: 'rgba(98, 240, 183, 0.2)', color: 'var(--green)', fontSize: '0.75rem', fontWeight: 'bold' }}>✓ Completed</span>;
+      case 'cancelled': return <span style={{ padding: '4px 8px', borderRadius: '4px', background: 'rgba(255, 61, 85, 0.2)', color: 'var(--red)', fontSize: '0.75rem', fontWeight: 'bold' }}>✕ Cancelled</span>;
+      case 'archived': return <span style={{ padding: '4px 8px', borderRadius: '4px', background: 'rgba(255, 255, 255, 0.2)', color: 'white', fontSize: '0.75rem', fontWeight: 'bold' }}>📦 Archived</span>;
+      default: return <span style={{ padding: '4px 8px', borderRadius: '4px', background: 'rgba(255, 215, 0, 0.2)', color: 'var(--gold)', fontSize: '0.75rem', fontWeight: 'bold' }}>● Active</span>;
+    }
+  };
+
+  const renderSquadGrid = (squadList, emptyMsg) => {
+    if (squadList.length === 0) return null;
+    return (
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px', marginBottom: '40px' }}>
+        {squadList.map(squad => (
+          <Link key={squad._id} to={`/squads/${squad._id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+            <motion.div className="glass-panel" style={{ padding: '24px', cursor: 'pointer', height: '100%', display: 'flex', flexDirection: 'column' }} whileHover={{ y: -4 }}>
+              <div style={{ marginBottom: 'auto' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                  <h3 style={{ fontSize: '1.2rem', color: 'var(--foreground)', margin: 0 }}>{squad.name}</h3>
+                  {getStatusBadge(squad.status)}
+                </div>
+                <p style={{ color: 'var(--muted)', fontSize: '0.9rem', marginBottom: '16px' }}>Host: {squad.hostId.name} &bull; {squad.city}</p>
+              </div>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ display: 'flex', gap: '16px', fontSize: '0.85rem', color: 'var(--muted)' }}>
+                  <span>{squad.acceptedCount} / {squad.memberCount} joined</span>
+                  {squad.pendingCount > 0 && <span style={{ color: 'var(--gold)' }}>{squad.pendingCount} pending</span>}
+                </div>
+                <ArrowRight size={16} style={{ color: 'var(--blue)' }} />
+              </div>
+            </motion.div>
+          </Link>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div style={{ maxWidth: '1000px', margin: '60px auto', padding: '0 20px' }}>
@@ -47,6 +91,8 @@ export default function SquadList() {
           Create Squad
         </Link>
       </div>
+
+      <NotificationBanner />
 
       {loading ? (
         <div style={{ padding: '40px', textAlign: 'center' }}>Loading...</div>
@@ -87,7 +133,7 @@ export default function SquadList() {
               <Clapperboard size={18} /> Active Squads ({activeSquads.length})
             </h2>
             
-            {activeSquads.length === 0 ? (
+            {acceptedSquads.length === 0 ? (
               <div className="empty-state glass-panel" style={{ padding: '40px', textAlign: 'center' }}>
                 <Clapperboard size={32} style={{ color: 'var(--muted)', margin: '0 auto 16px' }} />
                 <h3>No active squads</h3>
@@ -95,26 +141,36 @@ export default function SquadList() {
                 <Link to="/squads/create" className="button ghost">Start one</Link>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
-                {activeSquads.map(squad => (
-                  <Link key={squad._id} to={`/squads/${squad._id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                    <motion.div className="glass-panel" style={{ padding: '24px', cursor: 'pointer', height: '100%', display: 'flex', flexDirection: 'column' }} whileHover={{ y: -4 }}>
-                      <div style={{ marginBottom: 'auto' }}>
-                        <h3 style={{ fontSize: '1.2rem', marginBottom: '4px', color: 'var(--foreground)' }}>{squad.name}</h3>
-                        <p style={{ color: 'var(--muted)', fontSize: '0.9rem', marginBottom: '16px' }}>Host: {squad.hostId.name} &bull; {squad.city}</p>
-                      </div>
-                      
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                        <div style={{ display: 'flex', gap: '16px', fontSize: '0.85rem', color: 'var(--muted)' }}>
-                          <span>{squad.acceptedCount} / {squad.memberCount} joined</span>
-                          {squad.pendingCount > 0 && <span style={{ color: 'var(--gold)' }}>{squad.pendingCount} pending</span>}
-                        </div>
-                        <ArrowRight size={16} style={{ color: 'var(--blue)' }} />
-                      </div>
-                    </motion.div>
-                  </Link>
-                ))}
-              </div>
+              <>
+                {activeSquads.length > 0 && renderSquadGrid(activeSquads)}
+                
+                {completedSquads.length > 0 && (
+                  <>
+                    <h2 style={{ fontSize: '1.2rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--green)' }}>
+                      Completed Squads ({completedSquads.length})
+                    </h2>
+                    {renderSquadGrid(completedSquads)}
+                  </>
+                )}
+
+                {archivedSquads.length > 0 && (
+                  <>
+                    <h2 style={{ fontSize: '1.2rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--muted)' }}>
+                      Archived Squads ({archivedSquads.length})
+                    </h2>
+                    {renderSquadGrid(archivedSquads)}
+                  </>
+                )}
+
+                {cancelledSquads.length > 0 && (
+                  <>
+                    <h2 style={{ fontSize: '1.2rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--red)' }}>
+                      Cancelled Squads ({cancelledSquads.length})
+                    </h2>
+                    {renderSquadGrid(cancelledSquads)}
+                  </>
+                )}
+              </>
             )}
           </div>
         </>

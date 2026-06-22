@@ -108,6 +108,23 @@ export default function SquadDashboard({ user }) {
     }
   };
 
+  const handleHostAction = async (action) => {
+    if (!window.confirm(`Are you sure you want to ${action} this squad?`)) return;
+    try {
+      if (action === 'delete') {
+        await api(`/squads/${id}`, { method: 'DELETE' });
+        navigate('/squads/dashboard');
+      } else {
+        await api(`/squads/${id}/${action}`, { method: 'POST' });
+        const { squad: newSquad, members: newMembers } = await api(`/squads/${id}`);
+        setSquad(newSquad);
+        setMembers(newMembers);
+      }
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   const aggregatedVotes = useMemo(() => {
     const counts = {};
     members.forEach(m => {
@@ -158,10 +175,36 @@ export default function SquadDashboard({ user }) {
     <div style={{ maxWidth: '1200px', margin: '60px auto', padding: '0 20px' }}>
       <div style={{ marginBottom: '40px' }}>
         <Link to="/squads/dashboard" style={{ color: 'var(--gold)', textDecoration: 'none', fontSize: '0.9rem', marginBottom: '12px', display: 'inline-block' }}>&larr; Back to My Squads</Link>
-        <h1 style={{ fontSize: '2.5rem', marginBottom: '8px' }}>{squad.name}</h1>
-        <p style={{ color: 'var(--muted)', fontSize: '1.1rem' }}>
-          <User size={16} style={{ verticalAlign: '-3px', marginRight: '4px' }} /> Host: {squad.hostId.name} &bull; City: {squad.city}
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h1 style={{ fontSize: '2.5rem', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+              {squad.name}
+              {squad.status === 'completed' && <span style={{ padding: '6px 12px', borderRadius: '8px', background: 'rgba(98, 240, 183, 0.2)', color: 'var(--green)', fontSize: '1rem', fontWeight: 'bold' }}>✓ Completed</span>}
+              {squad.status === 'cancelled' && <span style={{ padding: '6px 12px', borderRadius: '8px', background: 'rgba(255, 61, 85, 0.2)', color: 'var(--red)', fontSize: '1rem', fontWeight: 'bold' }}>✕ Cancelled</span>}
+              {squad.status === 'archived' && <span style={{ padding: '6px 12px', borderRadius: '8px', background: 'rgba(255, 255, 255, 0.2)', color: 'white', fontSize: '1rem', fontWeight: 'bold' }}>📦 Archived</span>}
+            </h1>
+            <p style={{ color: 'var(--muted)', fontSize: '1.1rem' }}>
+              <User size={16} style={{ verticalAlign: '-3px', marginRight: '4px' }} /> Host: {squad.hostId.name} &bull; City: {squad.city}
+            </p>
+          </div>
+          {isHost && (
+            <div style={{ display: 'flex', gap: '12px' }}>
+              {!['completed', 'cancelled', 'archived'].includes(squad.status) && (
+                <button className="button ghost" style={{ padding: '8px 16px', color: 'var(--red)', border: '1px solid rgba(255,61,85,0.3)' }} onClick={() => handleHostAction('cancel')}>
+                  Cancel Squad
+                </button>
+              )}
+              {squad.status !== 'archived' && (
+                <button className="button ghost" style={{ padding: '8px 16px' }} onClick={() => handleHostAction('archive')}>
+                  Archive Squad
+                </button>
+              )}
+              <button className="button ghost" style={{ padding: '8px 16px', color: 'var(--red)' }} onClick={() => handleHostAction('delete')}>
+                Delete Squad
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px' }}>
@@ -199,7 +242,7 @@ export default function SquadDashboard({ user }) {
               ))}
             </div>
 
-            {isHost && (
+            {isHost && !['completed', 'cancelled', 'archived'].includes(squad.status) && (
               <form onSubmit={handleInvite} style={{ marginTop: '24px', display: 'flex', gap: '12px' }}>
                 <input 
                   type="email" 
@@ -234,10 +277,54 @@ export default function SquadDashboard({ user }) {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Availability & Recommendation */}
+        {/* RIGHT COLUMN: Availability & Recommendation OR Summary */}
         <div style={{ display: 'grid', gap: '32px', alignContent: 'start' }}>
           
-          <div className="glass-panel" style={{ padding: '32px' }}>
+          {['completed', 'cancelled', 'archived'].includes(squad.status) ? (
+            <div className="glass-panel" style={{ padding: '32px', background: squad.status === 'completed' ? 'linear-gradient(180deg, rgba(98,240,183,0.05), transparent)' : 'rgba(255,255,255,0.03)' }}>
+              <h3 style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px', color: squad.status === 'completed' ? 'var(--green)' : 'white' }}>
+                <Sparkles size={20} /> Squad {squad.status.charAt(0).toUpperCase() + squad.status.slice(1)}
+              </h3>
+              
+              {squad.status === 'completed' && (
+                <div style={{ display: 'grid', gap: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px' }}>
+                    <span style={{ color: 'var(--muted)' }}>Movie</span>
+                    <strong style={{ fontSize: '1.1rem' }}>{squad.movie}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px' }}>
+                    <span style={{ color: 'var(--muted)' }}>Theatre</span>
+                    <strong style={{ fontSize: '1.1rem' }}>{squad.theater}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px' }}>
+                    <span style={{ color: 'var(--muted)' }}>Date & Time</span>
+                    <strong style={{ fontSize: '1.1rem' }}>{new Date(squad.showTime).toLocaleString([], {weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit'})}</strong>
+                  </div>
+                  {squad.bookingRef && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px' }}>
+                      <span style={{ color: 'var(--muted)' }}>Booking Reference</span>
+                      <strong style={{ fontFamily: 'monospace', letterSpacing: '2px', color: 'var(--gold)' }}>{squad.bookingRef}</strong>
+                    </div>
+                  )}
+                  <Link to="/bookings" className="button primary" style={{ marginTop: '16px', textAlign: 'center' }}>
+                    View Tickets in My Bookings
+                  </Link>
+                </div>
+              )}
+              {squad.status === 'cancelled' && (
+                <p style={{ color: 'var(--red)', padding: '20px', background: 'rgba(255,0,0,0.1)', borderRadius: '12px' }}>
+                  This squad was cancelled by the host. No booking was made.
+                </p>
+              )}
+              {squad.status === 'archived' && !squad.bookingRef && (
+                <p style={{ color: 'var(--muted)', padding: '20px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px' }}>
+                  This squad is archived.
+                </p>
+              )}
+            </div>
+          ) : (
+            <>
+              <div className="glass-panel" style={{ padding: '32px' }}>
             <h3 style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <CalendarIcon size={20} /> Your Availability & Vote
             </h3>
@@ -353,6 +440,8 @@ export default function SquadDashboard({ user }) {
                 </motion.div>
               )}
             </div>
+          )}
+            </>
           )}
         </div>
 

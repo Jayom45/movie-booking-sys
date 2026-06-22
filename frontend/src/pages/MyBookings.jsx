@@ -55,7 +55,7 @@ function QRTicketCode({ booking }) {
 }
 
 // ─── Single ticket card ───────────────────────────────────────────────────────
-function BookingTicket({ booking, index, onCancel }) {
+function BookingTicket({ booking, index, onCancel, isShared }) {
   const [qrOpen, setQrOpen] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
@@ -80,6 +80,11 @@ function BookingTicket({ booking, index, onCancel }) {
       {/* ── Centre: details ── */}
       <div className="ticket-body">
         <div className="ticket-status-row">
+          {isShared && (
+            <span className="premium-label" style={{ background: 'rgba(59, 130, 246, 0.2)', color: '#93c5fd', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+              <Ticket size={14} /> Shared Squad Ticket (Host: {booking.user?.name})
+            </span>
+          )}
           {booking.status === 'cancelled' ? (
             <span className="premium-label ticket-cancelled-label">
               <XCircle size={14} /> Cancelled
@@ -192,17 +197,19 @@ function BookingTicket({ booking, index, onCancel }) {
                 <Mail size={15} />
                 {emailing ? 'Sending...' : 'Email Ticket'}
               </button>
-              <button
-                className="btn-cancel"
-                onClick={async () => {
-                  setCancelling(true);
-                  await onCancel(booking._id);
-                  setCancelling(false);
-                }}
-                disabled={cancelling}
-              >
-                {cancelling ? 'Cancelling...' : 'Cancel Booking'}
-              </button>
+              {!isShared && (
+                <button
+                  className="btn-cancel"
+                  onClick={async () => {
+                    setCancelling(true);
+                    await onCancel(booking._id);
+                    setCancelling(false);
+                  }}
+                  disabled={cancelling}
+                >
+                  {cancelling ? 'Cancelling...' : 'Cancel Booking'}
+                </button>
+              )}
             </>
           )}
         </div>
@@ -241,13 +248,20 @@ function BookingTicket({ booking, index, onCancel }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function MyBookings() {
   const [bookings, setBookings] = useState([]);
+  const [sharedBookings, setSharedBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('all');
 
   useEffect(() => {
-    api('/bookings/mine')
-      .then(setBookings)
+    Promise.all([
+      api('/bookings/mine'),
+      api('/bookings/shared')
+    ])
+      .then(([myB, sharedB]) => {
+        setBookings(myB);
+        setSharedBookings(sharedB);
+      })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
@@ -272,12 +286,14 @@ export default function MyBookings() {
   const displayedBookings = filter === 'all' ? bookings :
                             filter === 'upcoming' ? upcomingBookings :
                             filter === 'completed' ? completedBookings :
+                            filter === 'shared' ? sharedBookings :
                             cancelledBookings;
 
   const counts = {
     all: bookings.length,
     upcoming: upcomingBookings.length,
     completed: completedBookings.length,
+    shared: sharedBookings.length,
     cancelled: cancelledBookings.length
   };
 
@@ -296,6 +312,7 @@ export default function MyBookings() {
             { id: 'all', label: 'All', count: counts.all },
             { id: 'upcoming', label: 'Upcoming', count: counts.upcoming },
             { id: 'completed', label: 'Completed', count: counts.completed },
+            { id: 'shared', label: 'Shared Tickets', count: counts.shared },
             { id: 'cancelled', label: 'Cancelled', count: counts.cancelled },
           ].map(tab => (
             <button
@@ -347,16 +364,13 @@ export default function MyBookings() {
         <div className="booking-list" style={{ marginTop: '22px' }}>
           <AnimatePresence mode="popLayout">
             {displayedBookings.map((booking, index) => (
-              <motion.div
+              <BookingTicket
                 key={booking._id}
-                layout
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.25 }}
-              >
-                <BookingTicket booking={booking} index={index} onCancel={handleCancelBooking} />
-              </motion.div>
+                booking={booking}
+                index={index}
+                onCancel={handleCancelBooking}
+                isShared={filter === 'shared'}
+              />
             ))}
           </AnimatePresence>
         </div>

@@ -18,6 +18,7 @@ import SquadLanding from './pages/Squads/Landing.jsx';
 import SquadCreate from './pages/Squads/Create.jsx';
 import SquadDashboard from './pages/Squads/Dashboard.jsx';
 import SquadList from './pages/Squads/SquadList.jsx';
+import AIButton from './components/AI/AIButton.jsx';
 import { api, clearSession, getSession, saveSession } from './api.js';
 
 function RequireAuth({ user, children }) {
@@ -155,6 +156,7 @@ export default function App() {
         </AnimatePresence>
       </main>
       <Footer />
+      <AIButton user={auth.user} />
     </>
   );
 }

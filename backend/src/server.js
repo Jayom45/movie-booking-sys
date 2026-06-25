@@ -10,6 +10,7 @@ import showRoutes from './routes/shows.js';
 import adminRoutes from './routes/admin.js';
 import squadRoutes from './routes/squads.js';
 import notificationRoutes from './routes/notifications.js';
+import aiRoutes from './routes/ai.js';
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/squads', squadRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/ai', aiRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });

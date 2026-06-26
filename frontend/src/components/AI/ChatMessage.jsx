@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import { Link } from 'react-router-dom';
+import { Users, Ticket, Tag } from 'lucide-react';
 
 export default function ChatMessage({ message }) {
   const isUser = message.role === 'user';
@@ -26,9 +27,50 @@ export default function ChatMessage({ message }) {
     >
       <div className="ai-message-bubble">
         {isUser ? (
-          <p>{message.text}</p>
+          <p>{message.reply}</p>
         ) : (
-          <ReactMarkdown components={components}>{message.text}</ReactMarkdown>
+          <>
+            <ReactMarkdown components={components}>{message.reply || ''}</ReactMarkdown>
+            
+            {message.recommendations && message.recommendations.length > 0 && (
+              <div className="ai-recommendations-list">
+                {message.recommendations.map((rec, idx) => (
+                  <div key={idx} className="ai-rec-card">
+                    {rec.poster && (
+                      <div className="ai-rec-poster">
+                        <img src={rec.poster} alt={rec.title} />
+                      </div>
+                    )}
+                    <div className="ai-rec-details">
+                      <h4 className="ai-rec-title">{rec.title}</h4>
+                      <p className="ai-rec-genre">{rec.genre} &middot; ⭐ {rec.rating}</p>
+                      <p className="ai-rec-venue">{rec.theatre} &middot; {rec.showtime}</p>
+                      <p className="ai-rec-prices"><Ticket size={12} /> {rec.prices}</p>
+                      
+                      {rec.offer && (
+                        <div className="ai-rec-offer">
+                          <Tag size={12} /> {rec.offer}
+                        </div>
+                      )}
+                      
+                      <Link to={`/movies/${rec.movieId}`} className="ai-book-btn">
+                        View Show
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {message.isGroup && (
+              <div className="ai-group-prompt">
+                <p>Planning with friends?</p>
+                <Link to="/squads/create" className="ai-squad-btn">
+                  <Users size={16} /> Create CineSquad
+                </Link>
+              </div>
+            )}
+          </>
         )}
       </div>
     </motion.div>

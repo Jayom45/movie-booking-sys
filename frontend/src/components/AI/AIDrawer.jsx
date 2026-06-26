@@ -9,7 +9,7 @@ import TypingIndicator from './TypingIndicator';
 export default function AIDrawer({ isOpen, onClose }) {
   const [messages, setMessages] = useState([{
     role: 'assistant',
-    text: "Hi! I'm your CineAI Concierge. What kind of movie are you looking for today?"
+    reply: "Hi! I'm your CineAI Concierge. What kind of movie are you looking for today?"
   }]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -26,7 +26,7 @@ export default function AIDrawer({ isOpen, onClose }) {
   const handleSend = async (text) => {
     if (!text.trim()) return;
 
-    const userMessage = { role: 'user', text: text.trim() };
+    const userMessage = { role: 'user', reply: text.trim() };
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
@@ -36,12 +36,13 @@ export default function AIDrawer({ isOpen, onClose }) {
         method: 'POST',
         body: JSON.stringify({ prompt: text.trim() })
       });
-      setMessages(prev => [...prev, { role: 'assistant', text: data.reply }]);
+      // Push the entire data object
+      setMessages(prev => [...prev, { role: 'assistant', ...data }]);
     } catch (err) {
       console.error(err);
       setMessages(prev => [...prev, {
         role: 'assistant',
-        text: "I'm having trouble reaching the AI service right now. Please try again."
+        reply: "I'm having trouble reaching the AI service right now. Please try again."
       }]);
     } finally {
       setIsLoading(false);

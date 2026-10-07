@@ -403,6 +403,8 @@ function MovieManagement({ movies, setMovies, loading }) {
       setBusy(id);
       await api(`/movies/${id}`, { method: 'DELETE' });
       setMovies((prev) => prev.map((m) => (m._id === id ? { ...m, isActive: false } : m)));
+    } catch (err) {
+      alert(err.message);
     } finally {
       setBusy('');
       setDeleteTarget(null);
@@ -560,6 +562,8 @@ function ShowManagement({ shows, setShows, loading }) {
       setBusy(id);
       await api(`/shows/${id}`, { method: 'DELETE' });
       setShows((prev) => prev.filter((s) => s._id !== id));
+    } catch (err) {
+      alert(err.message);
     } finally {
       setBusy('');
       setDeleteTarget(null);

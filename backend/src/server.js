@@ -1,42 +1,16 @@
-import cors from 'cors';
 import dotenv from 'dotenv';
-import express from 'express';
+import { createApp } from './app.js';
 import { connectDB } from './config/db.js';
-import authRoutes from './routes/auth.js';
-import bookingRoutes from './routes/bookings.js';
-import movieRoutes from './routes/movies.js';
-import reviewRoutes from './routes/reviews.js';
-import showRoutes from './routes/shows.js';
-import adminRoutes from './routes/admin.js';
-import squadRoutes from './routes/squads.js';
-import notificationRoutes from './routes/notifications.js';
-import aiRoutes from './routes/ai.js';
 
 dotenv.config();
 
-const app = express();
+if (!process.env.JWT_SECRET) {
+  console.error('JWT_SECRET is missing in environment variables');
+  process.exit(1);
+}
+
+const app = createApp();
 const port = process.env.PORT || 5000;
-
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
-app.use(express.json());
-
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok' });
-});
-
-app.use('/api/auth', authRoutes);
-app.use('/api/movies', movieRoutes);
-app.use('/api/shows', showRoutes);
-app.use('/api/bookings', bookingRoutes);
-app.use('/api/reviews', reviewRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/squads', squadRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/ai', aiRoutes);
-
-app.use((req, res) => {
-  res.status(404).json({ message: 'Route not found' });
-});
 
 connectDB()
   .then(() => {

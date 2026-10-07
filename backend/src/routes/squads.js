@@ -5,6 +5,10 @@ import Squad from '../models/Squad.js';
 import SquadMember from '../models/SquadMember.js';
 import Show from '../models/Show.js';
 import Movie from '../models/Movie.js';
+import User from '../models/User.js';
+import { errorStatus } from '../utils/errorStatus.js';
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const router = express.Router();
 
@@ -54,7 +58,7 @@ router.get('/', protect, async (req, res) => {
         memberCount: squadMembers.length,
         pendingCount: squadMembers.filter(m => m.status === 'pending').length,
         acceptedCount: squadMembers.filter(m => m.status === 'accepted').length,
-        myStatus: me ? me.status : (squad.hostId._id.toString() === req.user._id.toString() ? 'accepted' : 'none')
+        myStatus: me ? me.status : (squad.hostId?._id?.toString() === req.user._id.toString() ? 'accepted' : 'none')
       };
     });
 
@@ -73,9 +77,17 @@ router.get('/:id', protect, async (req, res) => {
     const members = await SquadMember.find({ squadId: squad._id })
       .populate('userId', 'name')
       .populate('movieVote', 'title posterUrl');
+
+    // Only the host and invited members may see the squad
+    const isHost = squad.hostId?._id?.toString() === req.user._id.toString();
+    const isMember = members.some((m) => m.email === req.user.email);
+    if (!isHost && !isMember) {
+      return res.status(403).json({ message: 'You are not part of this squad' });
+    }
       
     res.json({ squad, members });
   } catch (error) {
+    if (error.name === 'CastError') return res.status(404).json({ message: 'Squad not found' });
     res.status(500).json({ message: error.message });
   }
 });
@@ -83,17 +95,21 @@ router.get('/:id', protect, async (req, res) => {
 // 4. Send email invites
 router.post('/:id/invite', protect, async (req, res) => {
   try {
-    const { emails } = req.body;
+    const emails = Array.isArray(req.body.emails)
+      ? [...new Set(req.body.emails.map((e) => String(e).trim().toLowerCase()))]
+      : [];
+    const invalidEmails = emails.filter((e) => !EMAIL_PATTERN.test(e));
+    if (emails.length === 0 || invalidEmails.length > 0) {
+      return res.status(400).json({ message: invalidEmails.length ? `Invalid email: ${invalidEmails.join(', ')}` : 'At least one email is required' });
+    }
+
     const squad = await Squad.findById(req.params.id);
     if (!squad) return res.status(404).json({ message: 'Squad not found' });
     if (squad.hostId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Only host can invite' });
     }
 
-    // Need to import User model at top if not imported, wait, we can just use mongoose.model('User')
-    const mongoose = (await import('mongoose')).default;
-    const User = mongoose.model('User');
-
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -103,21 +119,21 @@ router.post('/:id/invite', protect, async (req, res) => {
     });
 
     for (const email of emails) {
-      const existingMember = await SquadMember.findOne({ squadId: squad._id, email: email.toLowerCase() });
+      const existingMember = await SquadMember.findOne({ squadId: squad._id, email });
       if (!existingMember) {
         // Check if user already exists
-        const existingUser = await User.findOne({ email: email.toLowerCase() });
+        const existingUser = await User.findOne({ email });
         
         await SquadMember.create({
           squadId: squad._id,
-          email: email.toLowerCase(),
+          email,
           userId: existingUser ? existingUser._id : null,
           status: 'pending'
         });
       }
       
-      if (process.env.EMAIL_USER) {
-        const inviteLink = `http://localhost:5173/register?squad_invite=${squad._id}&email=${email.toLowerCase()}`;
+      if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+        const inviteLink = `${clientUrl}/register?squad_invite=${squad._id}&email=${encodeURIComponent(email)}`;
         await transporter.sendMail({
           from: `"CineSquad" <${process.env.EMAIL_USER}>`,
           to: email,
@@ -137,6 +153,9 @@ router.post('/:id/invite', protect, async (req, res) => {
 router.post('/:id/respond', protect, async (req, res) => {
   try {
     const { status } = req.body;
+    if (!['accepted', 'declined'].includes(status)) {
+      return res.status(400).json({ message: "status must be 'accepted' or 'declined'" });
+    }
     const member = await SquadMember.findOne({ squadId: req.params.id, email: req.user.email });
     if (!member) return res.status(404).json({ message: 'Invite not found' });
     
@@ -161,7 +180,7 @@ router.put('/:id/availability', protect, async (req, res) => {
     await member.save();
     res.json(member);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(errorStatus(error)).json({ message: error.message });
   }
 });
 
@@ -169,6 +188,7 @@ router.put('/:id/availability', protect, async (req, res) => {
 router.get('/:id/recommendations', protect, async (req, res) => {
   try {
     const squad = await Squad.findById(req.params.id);
+    if (!squad) return res.status(404).json({ message: 'Squad not found' });
     const members = await SquadMember.find({ squadId: squad._id, status: 'accepted' });
     
     const votes = {};
@@ -190,7 +210,9 @@ router.get('/:id/recommendations', protect, async (req, res) => {
     
     if (!topMovieId) return res.status(400).json({ message: 'Not enough movie votes' });
     
-    const shows = await Show.find({ movie: topMovieId, city: squad.city }).populate('movie').populate('theater');
+    const shows = await Show.find({ movie: topMovieId, city: squad.city, showTime: { $gte: new Date() } })
+      .sort({ showTime: 1 })
+      .populate('movie');
     
     res.json({
       topSlot,

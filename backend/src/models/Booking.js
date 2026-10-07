@@ -14,6 +14,7 @@ const bookingSchema = new mongoose.Schema(
     totalAmount: { type: Number, required: true, min: 0 },
     originalAmount: { type: Number },
     discountAmount: { type: Number, default: 0 },
+    convenienceFee: { type: Number, default: 0 },
     finalAmount: { type: Number },
     couponCode: { type: String },
     status: { type: String, enum: ['confirmed', 'cancelled'], default: 'confirmed' },

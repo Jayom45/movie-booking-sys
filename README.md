@@ -69,6 +69,18 @@ npm run dev
 
 Frontend runs on `http://localhost:5173`.
 
+## Running tests
+
+```bash
+cd movie-booking-mern/backend
+npm test
+```
+
+The tests start the API in-process and run against a separate database named after
+your `MONGO_URI` database with a `_test` suffix (or `TEST_MONGO_URI` if set). That test
+database is wiped before and after each run; the tests refuse to run against any
+database whose name does not end in `_test`.
+
 ## Features
 
 - User registration and login

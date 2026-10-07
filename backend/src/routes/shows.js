@@ -1,13 +1,16 @@
 import express from 'express';
+import Booking from '../models/Booking.js';
 import Show from '../models/Show.js';
 import { adminOnly, protect } from '../middleware/auth.js';
+import { errorStatus } from '../utils/errorStatus.js';
+import { escapeRegex } from '../utils/escapeRegex.js';
 
 const router = express.Router();
 
 function buildShowFilter(query) {
   const filter = {};
   if (query.movie) filter.movie = query.movie;
-  if (query.city) filter.city = new RegExp(query.city, 'i');
+  if (typeof query.city === 'string' && query.city) filter.city = new RegExp(escapeRegex(query.city), 'i');
   if (query.date) {
     const start = new Date(`${query.date}T00:00:00.000`);
     const end = new Date(`${query.date}T23:59:59.999`);
@@ -18,8 +21,12 @@ function buildShowFilter(query) {
 
 // ─── GET /api/shows/meta/cities  (public) ─────────────────────────────────────
 router.get('/meta/cities', async (req, res) => {
-  const cities = await Show.distinct('city', { showTime: { $gte: new Date() } });
-  res.json(cities.sort());
+  try {
+    const cities = await Show.distinct('city', { showTime: { $gte: new Date() } });
+    res.json(cities.sort());
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 // ─── GET /api/shows/admin/all  (admin — all shows, no time filter) ─────────────
@@ -34,36 +41,51 @@ router.get('/admin/all', protect, adminOnly, async (req, res) => {
 
 // ─── GET /api/shows  (public) ─────────────────────────────────────────────────
 router.get('/', async (req, res) => {
-  const filter = buildShowFilter(req.query);
+  try {
+    const filter = buildShowFilter(req.query);
 
-  const shows = await Show.find(filter).populate('movie').sort({ showTime: 1 });
-  res.json(shows);
+    const shows = await Show.find(filter).populate('movie').sort({ showTime: 1 });
+    res.json(shows);
+  } catch (error) {
+    res.status(errorStatus(error)).json({ message: error.message });
+  }
 });
 
 // ─── GET /api/shows/:id  (public) ─────────────────────────────────────────────
 router.get('/:id', async (req, res) => {
-  const show = await Show.findById(req.params.id).populate('movie');
+  try {
+    const show = await Show.findById(req.params.id).populate('movie');
 
-  if (!show) {
-    return res.status(404).json({ message: 'Show not found' });
+    if (!show) {
+      return res.status(404).json({ message: 'Show not found' });
+    }
+
+    res.json(show);
+  } catch (error) {
+    if (error.name === 'CastError') {
+      return res.status(404).json({ message: 'Show not found' });
+    }
+    res.status(500).json({ message: error.message });
   }
-
-  res.json(show);
 });
 
 // ─── POST /api/shows  (admin — single show) ───────────────────────────────────
 router.post('/', protect, adminOnly, async (req, res) => {
-  const { movie, theater, city, screen, showTime, pricePremium, priceGold, priceSilver, totalSeats } = req.body;
-  const show = await Show.create({
-    movie, theater, city, screen, showTime, totalSeats,
-    prices: {
-      premium: pricePremium || 350,
-      gold: priceGold || 250,
-      silver: priceSilver || 180
-    }
-  });
-  await show.populate('movie');
-  res.status(201).json(show);
+  try {
+    const { movie, theater, city, screen, showTime, pricePremium, priceGold, priceSilver, totalSeats } = req.body;
+    const show = await Show.create({
+      movie, theater, city, screen, showTime, totalSeats,
+      prices: {
+        premium: pricePremium || 350,
+        gold: priceGold || 250,
+        silver: priceSilver || 180
+      }
+    });
+    await show.populate('movie');
+    res.status(201).json(show);
+  } catch (error) {
+    res.status(errorStatus(error)).json({ message: error.message });
+  }
 });
 
 // ─── POST /api/shows/bulk  (admin — create multiple shows for selected time slots) ─
@@ -108,7 +130,7 @@ router.post('/bulk', protect, adminOnly, async (req, res) => {
 
     res.status(201).json({ created, duplicates });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(errorStatus(error)).json({ message: error.message });
   }
 });
 
@@ -133,18 +155,24 @@ router.put('/:id', protect, adminOnly, async (req, res) => {
 
     res.json(show);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(errorStatus(error)).json({ message: error.message });
   }
 });
 
 // ─── DELETE /api/shows/:id  (admin — hard-delete show) ────────────────────────
 router.delete('/:id', protect, adminOnly, async (req, res) => {
   try {
+    // Deleting a show with live bookings would leave those bookings pointing at nothing
+    const hasBookings = await Booking.exists({ show: req.params.id, status: 'confirmed' });
+    if (hasBookings) {
+      return res.status(409).json({ message: 'This show has confirmed bookings and cannot be deleted.' });
+    }
+
     const show = await Show.findByIdAndDelete(req.params.id);
     if (!show) return res.status(404).json({ message: 'Show not found' });
     res.json({ message: 'Show deleted' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(errorStatus(error)).json({ message: error.message });
   }
 });
 

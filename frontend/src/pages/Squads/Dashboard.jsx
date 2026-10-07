@@ -422,7 +422,7 @@ export default function SquadDashboard({ user }) {
                           <div key={show._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
                             <div>
                               <div style={{ fontWeight: 'bold' }}>{show.movie.title}</div>
-                              <div style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>{show.theater.name} &bull; {new Date(show.showTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                              <div style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>{show.theater}, {show.city} &bull; {new Date(show.showTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
                             </div>
                             <Link to={`/movies/${show.movie._id}?showId=${show._id}&squadId=${id}`} className="button primary" style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
                               Proceed To Booking

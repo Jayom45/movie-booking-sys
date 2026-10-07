@@ -1,9 +1,19 @@
-import React, { useState } from 'react';
+import React, { lazy, Suspense, useState } from 'react';
 import { motion } from 'framer-motion';
-import AIDrawer from './AIDrawer';
+
+// The drawer (and the markdown renderer it uses) is only downloaded when the chat is first opened
+const loadDrawer = () => import('./AIDrawer');
+const AIDrawer = lazy(loadDrawer);
 
 export default function AIButton({ user }) {
   const [isOpen, setIsOpen] = useState(false);
+  // Stay mounted after the first open so the close animation still plays
+  const [hasOpened, setHasOpened] = useState(false);
+
+  function open() {
+    setHasOpened(true);
+    setIsOpen(true);
+  }
 
   if (!user) return null;
 
@@ -11,7 +21,8 @@ export default function AIButton({ user }) {
     <>
       <motion.button
         className="ai-floating-btn"
-        onClick={() => setIsOpen(true)}
+        onClick={open}
+        onMouseEnter={() => loadDrawer().catch(() => {})}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         initial={{ opacity: 0, y: 50 }}
@@ -22,7 +33,11 @@ export default function AIButton({ user }) {
         <span className="ai-btn-icon">✨</span>
       </motion.button>
       
-      <AIDrawer isOpen={isOpen} onClose={() => setIsOpen(false)} />
+      {hasOpened && (
+        <Suspense fallback={null}>
+          <AIDrawer isOpen={isOpen} onClose={() => setIsOpen(false)} />
+        </Suspense>
+      )}
     </>
   );
 }

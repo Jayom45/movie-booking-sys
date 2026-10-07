@@ -4,7 +4,8 @@ import QRCode from 'qrcode';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../api.js';
-import { generateAndOpenTicketPdf, generatePdfBlob } from '../pdfGenerator.jsx';
+// jsPDF and html2canvas are large, so the PDF generator is only loaded when a ticket is downloaded or emailed
+const loadPdfGenerator = () => import('../pdfGenerator.jsx');
 import NotificationBanner from '../components/NotificationBanner.jsx';
 
 // ─── Build the plain-text QR payload ─────────────────────────────────────────
@@ -165,6 +166,7 @@ function BookingTicket({ booking, index, onCancel, isShared }) {
                     onClick={async () => {
                       setGeneratingPdf(true);
                       try {
+                        const { generateAndOpenTicketPdf } = await loadPdfGenerator();
                         await generateAndOpenTicketPdf(booking);
                       } finally {
                         setGeneratingPdf(false);
@@ -181,6 +183,7 @@ function BookingTicket({ booking, index, onCancel, isShared }) {
                     onClick={async () => {
                       setEmailing(true);
                       try {
+                        const { generatePdfBlob } = await loadPdfGenerator();
                         const pdfBlob = await generatePdfBlob(booking);
                         const formData = new FormData();
                         formData.append('ticketPdf', pdfBlob, `ticket-${booking._id}.pdf`);
@@ -276,7 +279,10 @@ export default function MyBookings() {
       api('/bookings/mine'),
       api('/bookings/shared')
     ])
-      .then(([myB, sharedB]) => {
+      .then(([rawMyB, rawSharedB]) => {
+        // Skip bookings whose show or movie no longer exists so the page can't crash on them
+        const myB = rawMyB.filter((b) => b.show?.movie);
+        const sharedB = rawSharedB.filter((b) => b.show?.movie);
         setBookings(myB);
         setSharedBookings(sharedB);
         

@@ -6,6 +6,8 @@ import { api } from '../api.js';
 import { getValidGenres } from '../utils.js';
 
 const rows = ['A', 'B', 'C', 'D'];
+// Flat fee per booking in Rs. The server charges the same amount (CONVENIENCE_FEE in backend/src/utils/pricing.js).
+const CONVENIENCE_FEE = 40;
 // seats generation moved dynamically inside MovieDetails component
 
 function dateKey(value) {
@@ -480,7 +482,7 @@ export default function MovieDetails({ user }) {
         show: selectedShow,
         seats: selectedSeats,
         baseTotal: total,
-        convenienceFee: 40, // Flat fee in Rs
+        convenienceFee: CONVENIENCE_FEE,
         squadId
       }
     });

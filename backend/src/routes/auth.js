@@ -22,10 +22,14 @@ function publicUser(user) {
 
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, password } = req.body;
+    const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Name, email, and password are required' });
+    }
+    if (String(password).length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
     }
 
     const exists = await User.findOne({ email });
@@ -36,13 +40,22 @@ router.post('/register', async (req, res) => {
     const user = await User.create({ name, email, password });
     res.status(201).json({ user: publicUser(user), token: signToken(user) });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    if (error.code === 11000) {
+      return res.status(409).json({ message: 'Email already registered' });
+    }
+    res.status(error.name === 'ValidationError' ? 400 : 500).json({ message: error.message });
   }
 });
 
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { password } = req.body;
+    const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
     const user = await User.findOne({ email });
 
     if (!user || !(await user.matchPassword(password))) {

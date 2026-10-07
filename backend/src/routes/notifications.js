@@ -20,6 +20,7 @@ router.put('/:id/read', protect, async (req, res) => {
       { read: true },
       { new: true }
     );
+    if (!notification) return res.status(404).json({ message: 'Notification not found' });
     res.json(notification);
   } catch (error) {
     res.status(500).json({ message: error.message });

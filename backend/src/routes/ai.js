@@ -9,8 +9,11 @@ const router = express.Router();
 router.post('/concierge', protect, async (req, res) => {
   try {
     const { prompt } = req.body;
-    if (!prompt) {
+    if (typeof prompt !== 'string' || !prompt.trim()) {
       return res.status(400).json({ success: false, reason: 'Bad Request', details: 'Prompt is required' });
+    }
+    if (prompt.length > 1000) {
+      return res.status(400).json({ success: false, reason: 'Bad Request', details: 'Prompt is too long (max 1000 characters)' });
     }
 
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
@@ -36,7 +39,7 @@ router.post('/concierge', protect, async (req, res) => {
       .lean();
 
     // Map shows to a simpler format for the AI
-    const availableShows = shows.map(s => {
+    const availableShows = shows.filter(s => s.movie).map(s => {
       const availableSeats = s.totalSeats - (s.bookedSeats ? s.bookedSeats.length : 0);
       return {
         movieTitle: s.movie?.title,
@@ -53,7 +56,7 @@ router.post('/concierge', protect, async (req, res) => {
     const mappedMovies = movies.map(m => ({
       id: m._id,
       title: m.title,
-      genre: m.genre.join(', '),
+      genre: (m.genre || []).join(', '),
       language: m.language,
       duration: m.durationMinutes,
       rating: m.rating,
@@ -132,7 +135,7 @@ NEVER wrap your JSON in markdown codeblocks like \`\`\`json. Return pure raw JSO
         movieId: m._id,
         title: m.title,
         poster: m.posterUrl,
-        genre: m.genre.join(', '),
+        genre: (m.genre || []).join(', '),
         rating: m.rating,
         theatre: "Multiple Theatres",
         showtime: "Various Times",

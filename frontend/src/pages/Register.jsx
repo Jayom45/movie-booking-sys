@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { Lock, Mail, User, UserPlus } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { api } from '../api.js';
+import { api, saveSession } from '../api.js';
 
 export default function Register({ onLogin }) {
   const [searchParams] = useSearchParams();
@@ -19,7 +19,7 @@ export default function Register({ onLogin }) {
       const userData = await api('/auth/register', { method: 'POST', body: JSON.stringify(form) });
       
       // Store token immediately so subsequent api calls work
-      localStorage.setItem('auth', JSON.stringify(userData));
+      saveSession(userData);
       
       if (squadInvite) {
         try {

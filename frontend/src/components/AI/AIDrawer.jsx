@@ -99,6 +99,7 @@ export default function AIDrawer({ isOpen, onClose }) {
                   type="text"
                   placeholder="Ask me anything about movies..."
                   value={input}
+                  maxLength={1000}
                   onChange={e => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
                   disabled={isLoading}
